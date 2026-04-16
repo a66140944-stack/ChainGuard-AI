@@ -1,0 +1,44 @@
+# ============================
+# Root Environment files
+# ============================
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+.env.local
+.env.*.local
+
+# ============================
+# Python standard ignores
+# ============================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# ============================
+# Jupyter & OS Files
+# ============================
+.ipynb_checkpoints
+.DS_Store
+Thumbs.db
+
+# ============================
+# AI Solution Specific Rules
+# ============================
+
+# Ignore massive CSV datasets
+AI Solution/ai-engine/dataset/*.csv
+
+# Keep generator scripts explicitly tracked
+!AI Solution/ai-engine/dataset/generate_dataset.py
+!AI Solution/ai-engine/dataset/preprocess_dataco.py
+!AI Solution/ai-engine/dataset/preprocess_faf.py
+!AI Solution/ai-engine/dataset/fetch_uci_online_retail.py
+
+# NOTE: ML Model artifacts are currently ignored.
+# This means your teammates must run 'python train.py' on their PC to generate the model files.
+AI Solution/ai-engine/models/
