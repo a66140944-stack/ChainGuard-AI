@@ -1,0 +1,2 @@
+-r backend/requirements_backend.txt
+-r ai-engine/requirements_ai.txt
