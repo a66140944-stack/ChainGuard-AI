@@ -13,10 +13,10 @@ export default function ShipmentCard({ shipment, isActive, onClick }) {
     <button
       type="button"
       onClick={onClick}
-      className={`w-[320px] shrink-0 rounded-3xl border p-5 text-left shadow-lg shadow-slate-950/5 transition hover:-translate-y-1 hover:shadow-xl ${
+      className={`cg-shine w-[320px] shrink-0 rounded-3xl border p-5 text-left shadow-lg shadow-slate-950/5 transition hover:-translate-y-1 hover:shadow-xl ${
         isActive
           ? "border-brand-500/40 bg-brand-500/10 ring-2 ring-brand-500/20"
-          : "border-white/10 bg-surface"
+          : "cg-glass border-white/10"
       }`}
     >
       <div className="flex items-start justify-between gap-4">

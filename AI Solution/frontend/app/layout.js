@@ -1,5 +1,9 @@
 import "../styles/globals.css";
 import { ShipmentContextProvider } from "../context/ShipmentContext.jsx";
+import HyperBackdrop from "../components/HyperBackdrop.jsx";
+import { Inter } from "next/font/google";
+
+const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
   title: "ChainGuard - Supply Chain Management",
@@ -10,7 +14,8 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className="min-h-full bg-background text-foreground">
+      <body className={`${inter.className} min-h-full bg-background text-foreground`}>
+        <HyperBackdrop />
         <ShipmentContextProvider>{children}</ShipmentContextProvider>
       </body>
     </html>

@@ -36,7 +36,7 @@ export default function Navbar() {
   }
 
   return (
-    <header className="sticky top-0 z-50 border-b border-white/10 bg-background/80 backdrop-blur-xl">
+    <header className="sticky top-0 z-50 border-b border-white/10 bg-background/70 backdrop-blur-xl">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4">
         <Link href="/" className="flex items-center gap-3">
           <LogoMark />
@@ -62,19 +62,19 @@ export default function Navbar() {
           <button
             type="button"
             onClick={toggleTheme}
-            className="inline-flex h-10 items-center justify-center rounded-xl border border-white/10 bg-surface px-3 text-sm font-medium shadow-sm transition hover:bg-white/80 dark:hover:bg-white/10"
+            className="cg-glass cg-shine inline-flex h-10 items-center justify-center rounded-xl border border-white/10 px-3 text-sm font-medium shadow-sm backdrop-blur-xl transition hover:bg-white/80 dark:hover:bg-white/10"
           >
             {darkModeEnabled ? "Light" : "Dark"}
           </button>
           <Link
             href="/login"
-            className="hidden h-10 items-center justify-center rounded-xl border border-white/10 bg-surface px-4 text-sm font-semibold shadow-sm transition hover:bg-white/80 dark:hover:bg-white/10 sm:inline-flex"
+            className="cg-glass cg-shine hidden h-10 items-center justify-center rounded-xl border border-white/10 px-4 text-sm font-semibold shadow-sm backdrop-blur-xl transition hover:bg-white/80 dark:hover:bg-white/10 sm:inline-flex"
           >
             Login
           </Link>
           <Link
             href="/signup"
-            className="inline-flex h-10 items-center justify-center rounded-xl bg-brand-600 px-4 text-sm font-semibold text-white shadow-lg shadow-brand-600/20 transition hover:bg-brand-700"
+            className="cg-shine inline-flex h-10 items-center justify-center rounded-xl bg-brand-600 px-4 text-sm font-semibold text-white shadow-lg shadow-brand-600/25 transition hover:bg-brand-700"
           >
             Get Started
           </Link>

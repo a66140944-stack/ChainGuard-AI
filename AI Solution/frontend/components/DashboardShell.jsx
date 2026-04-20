@@ -55,7 +55,7 @@ export default function DashboardShell({ children }) {
         </div>
 
         <div className="min-w-0 flex-1">
-          <header className="sticky top-4 z-40 flex items-center justify-between gap-4 rounded-3xl border border-white/10 bg-surface px-4 py-4 shadow-xl shadow-slate-950/5 backdrop-blur-xl">
+          <header className="cg-glass cg-shine sticky top-4 z-40 flex items-center justify-between gap-4 rounded-3xl border border-white/10 px-4 py-4 backdrop-blur-xl">
             <div className="flex items-center gap-3">
               <button
                 type="button"
@@ -78,7 +78,7 @@ export default function DashboardShell({ children }) {
               <button
                 type="button"
                 onClick={handleLogout}
-                className="inline-flex h-11 items-center justify-center rounded-2xl border border-white/10 bg-white/70 px-4 text-sm font-semibold shadow-sm transition hover:bg-white dark:bg-white/5 dark:hover:bg-white/10"
+                className="cg-shine inline-flex h-11 items-center justify-center rounded-2xl border border-white/10 bg-white/70 px-4 text-sm font-semibold shadow-sm transition hover:bg-white dark:bg-white/5 dark:hover:bg-white/10"
               >
                 Logout
               </button>

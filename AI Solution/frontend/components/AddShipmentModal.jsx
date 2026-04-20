@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useShipments } from "../context/ShipmentContext.jsx";
 
 function inputClassName() {
-  return "w-full rounded-2xl border border-white/10 bg-white/70 px-4 py-3 text-sm shadow-sm outline-none transition placeholder:text-muted dark:bg-white/5";
+  return "w-full rounded-2xl border border-white/10 bg-white/70 px-4 py-3 text-sm shadow-sm outline-none transition placeholder:text-muted focus:ring-4 focus:ring-[var(--ring)]/30 dark:bg-white/5";
 }
 
 const initialFormValues = {
@@ -78,7 +78,7 @@ export default function AddShipmentModal({ isOpen, onClose }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 p-4 backdrop-blur-md">
-      <div className="w-full max-w-3xl rounded-[28px] border border-white/10 bg-surface-strong p-6 shadow-2xl shadow-slate-950/20">
+      <div className="cg-glass cg-shine w-full max-w-3xl rounded-[28px] border border-white/10 bg-surface-strong p-6 shadow-2xl shadow-slate-950/20">
         <div className="flex items-center justify-between gap-4 border-b border-white/10 pb-4">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-muted">Create Shipment</p>
@@ -87,7 +87,7 @@ export default function AddShipmentModal({ isOpen, onClose }) {
           <button
             type="button"
             onClick={onClose}
-            className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/60 text-lg shadow-sm transition hover:bg-white dark:bg-white/5 dark:hover:bg-white/10"
+            className="cg-shine inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/60 text-lg shadow-sm transition hover:bg-white dark:bg-white/5 dark:hover:bg-white/10"
           >
             ×
           </button>

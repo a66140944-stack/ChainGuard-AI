@@ -1,6 +1,6 @@
 export default function ChartCard({ title, subtitle, children }) {
   return (
-    <section className="rounded-[28px] border border-white/10 bg-surface p-5 shadow-xl shadow-slate-950/5 backdrop-blur-xl">
+    <section className="cg-glass cg-shine rounded-[28px] border border-white/10 p-5 backdrop-blur-xl">
       <div className="mb-5 flex items-start justify-between gap-4">
         <div>
           <h2 className="text-base font-semibold">{title}</h2>
