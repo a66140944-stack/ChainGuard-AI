@@ -1,66 +1,116 @@
-# ChainGuard: Intelligent Supply Chain AI Engine 🚚🤖
+# ChainGuard: Intelligent Supply Chain AI Prototype 🚚🤖
 
-**ChainGuard** is a next-generation AI-powered logistics framework designed to predict supply chain delays, monitor cold-chain variables (like temperature and battery life), and execute smart re-routing during severe external events (e.g., cyclones, traffic).
+ChainGuard is an AI-powered supply chain monitoring platform built to help logistics operations teams detect risk, predict delays, and recommend smarter routes in real time.
 
-> **Built for the Google Solution Challenge**
-> Tackling **UN Sustainable Development Goals (SDGs):**
-> * **Goal 9:** Industry, Innovation and Infrastructure
-> * **Goal 13:** Climate Action (optimized routing reduces emissions)
+This repository contains the full prototype for a hackathon-ready logistics solution, including:
 
-## 🌟 Key Features
+- a **Flask backend** with telemetry ingestion, risk scoring, and Socket.IO updates
+- an **AI engine** for risk classification, delay estimation, and rerouting
+- a **Next.js frontend** dashboard for operations visibility
+- an **IoT simulator** for publishing sample shipment telemetry via MQTT
+- documentation and deployment guidance for submission
 
-1. **Dual ML Architecture (XGBoost):** 
-   - **Risk Classifier:** Evaluates real-time sensor data (Safe / Warning / Critical).
-   - **Delay Regressor:** Predicts the exact minutes a shipment will be delayed.
-   - *GPU-accelerated and capable of handling data imbalances.*
+## 🚀 What ChainGuard Does
 
-2. **Gemini AI Explanations 🧠:**
-   - Interprets complex routing and risk data into plain, actionable language for logistics managers utilizing Google's Gemini LLM.
+- Ingests shipment telemetry from REST or MQTT sources
+- Computes hybrid risk scores using both ML and rule-based logic
+- Predicts shipment delays and estimated arrival times
+- Recommends alternate routes when risk becomes elevated
+- Provides human-friendly explanations via Gemini or template fallback
+- Streams live shipment updates to the frontend dashboard
 
-3. **Smart Re-routing Engine:**
-   - Continuously monitors routes via **OpenRouteService**. If a risk score surpasses `0.40`, the model automatically suggests faster Alternate Routes complete with new ETA calculations and Map Polylines.
+## 🎯 Key Features
 
-4. **Hybrid Rule-Based Fallback:**
-   - Combines traditional threshold rules (e.g., temperature > 35°C) with Machine Learning confidence scores to prevent hallucination and guarantee system reliability.
+- **Hybrid AI Architecture**: Combines XGBoost prediction, rule-based safety checks, and model fallback.
+- **Smart rerouting**: Generates alternate route options when risk exceeds the defined threshold.
+- **Live telemetry**: Supports MQTT ingestion and REST API ingestion.
+- **Fallback reliability**: Works without Gemini, OpenRouteService, or persistent storage.
+- **Demo-ready UI**: Includes a Next.js dashboard with shipment cards, search, and add-shipment workflows.
 
-## 🛠 Project Structure
+## 📁 Repository Structure
 
-```
-├── ai-engine/                  # The brain of ChainGuard (AI models & prediction)
-│   ├── predictor.py            # Primary API Entry Point (full_prediction method)
-│   ├── rerouting_engine.py     # Map & OpenRouteService Integration
-│   ├── gemini_explainer.py     # Google Gemini API integration
-│   ├── train.py                # Model training (GPU-First XGBoost)
-│   └── models/                 # Saved artifacts (risk_model.pkl, delay_model.pkl)
-├── backend/                    # Core API layer (Flask/FastAPI) to expose ML to the web
-├── frontend/                   # User dashboard and Map UI
-└── docs/                       # Architecture diagrams and flow logic
-```
-
-## 🚀 Integrating the AI (For Backend Developers)
-
-The entire AI framework is accessible via a single function call. Import the `full_prediction` function in your backend routing logic.
-
-```python
-from ai_engine.predictor import full_prediction
-
-# Sample payload from IoT vehicle sensors
-sensor_reading = {
-    "shipment_id": "SHP-002",
-    "speed_kmh": 11.0,
-    "temperature_c": 38.5,
-    "battery_pct": 18.0,
-    "external_event": {"name": "Cyclone warning", "severity": 0.38},
-    "lat": 14.5,
-    "lng": 80.5
-}
-
-# The AI analyzes risk, delay, and calculates new map routes instantly
-ai_analysis_result = full_prediction(sensor_reading)
+```text
+├── AI Solution/                # Main prototype codebase
+│   ├── backend/                # API and real-time backend services
+│   ├── ai-engine/              # Risk scoring, delay prediction, rerouting, explanations
+│   ├── frontend/               # Next.js dashboard and UI
+│   ├── iot-simulator/          # MQTT telemetry publisher and simulator scripts
+│   └── docs/                   # Architecture, flow, and presentation assets
+└── README.md                   # Project overview and starter guide
 ```
 
-## 📦 How to Train the Model Locally
-1. Navigate to the model directory: `cd ai-engine`
-2. Install requirements (XGBoost, Pandas, scikit-learn): `pip install -r requirements_ai.txt`
-3. Execute the training pipeline: `python train.py`
-4. The script will output training metrics (accuracy, macro-F1, MAE) and update the `.pkl` files in the `models/` directory along with a `training_report.png`.
+## 🧭 Quick Start
+
+### 1. Run the backend
+
+```powershell
+cd "AI Solution/backend"
+pip install -r requirements_backend.txt
+python app.py
+```
+
+### 2. Run the frontend
+
+```powershell
+cd "AI Solution/frontend"
+npm install
+npm run dev
+```
+
+### 3. Optional: run the simulator
+
+```powershell
+cd "AI Solution/iot-simulator"
+python mqtt_publisher.py
+```
+
+### 4. Open the dashboard
+
+Visit **[http://localhost:3000](http://localhost:3000)** in your browser.
+
+## 🛠 Environment Configuration
+
+Create `AI Solution/backend/.env` using `AI Solution/backend/.env.example` as a starting point.
+
+Minimum recommended values:
+
+```env
+PORT=5000
+AUTH_REQUIRED=false
+MONGO_URI=mongodb://localhost:27017/chainguard
+MQTT_ENABLED=false
+MQTT_BROKER_HOST=127.0.0.1
+MQTT_BROKER_PORT=1883
+MQTT_TOPIC=chainguard/shipments/#
+MQTT_CLIENT_ID=chainguard-backend
+```
+
+## 📦 Deployment Recommendations
+
+For a hackathon submission, use hosted services so the prototype can be accessed publicly.
+
+- **Frontend**: Vercel or Firebase Hosting
+- **Backend**: Google Cloud Run
+- **Database**: MongoDB Atlas or Google Cloud Storage
+- **Secrets**: Google Secret Manager or environment variables
+
+## 📌 Submission Guidance
+
+Submit the public frontend URL as your live prototype link, along with the GitHub repository URL.
+
+Include notes that the backend supports:
+
+- `GET /api/health`
+- `GET /api/shipments`
+- `POST /api/ingest`
+- `GET /api/shipments/<shipment_id>/history`
+
+## 💡 Notes for Developers
+
+- The AI engine entry point is `AI Solution/ai-engine/predictor.py`
+- The backend is implemented in `AI Solution/backend/app.py`
+- The frontend is implemented in `AI Solution/frontend/app/page.js`
+
+## 📘 Additional Documentation
+
+See `AI Solution/docs/README.md` for full architecture, setup, and presentation guidance.

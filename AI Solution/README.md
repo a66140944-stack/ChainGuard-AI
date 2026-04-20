@@ -1,116 +1,116 @@
-# ChainGuard
+# ChainGuard: Intelligent Supply Chain AI Prototype 🚚🤖
 
-ChainGuard is an AI-assisted logistics risk monitoring system built for hackathon/demo use. It combines live shipment telemetry, MQTT-based ingestion, backend risk analysis, rerouting support, and AI-generated operational explanations.
+ChainGuard is an AI-powered supply chain monitoring platform built to help logistics operations teams detect risk, predict delays, and recommend smarter routes in real time.
 
-## Project Modules
+This repository contains the full prototype for a hackathon-ready logistics solution, including:
 
-- `backend/`: Flask API, Socket.IO updates, MongoDB/GCS persistence, MQTT subscriber, and AI-engine integration
-- `ai-engine/`: prediction, rerouting, and Gemini explanation logic
-- `iot-simulator/`: shipment telemetry generator and MQTT publisher
-- `frontend/`: dashboard scaffold for the web prototype
-- `docs/`: supporting architecture and presentation assets
+- a **Flask backend** with telemetry ingestion, risk scoring, and Socket.IO updates
+- an **AI engine** for risk classification, delay estimation, and rerouting
+- a **Next.js frontend** dashboard for operations visibility
+- an **IoT simulator** for publishing sample shipment telemetry via MQTT
+- documentation and deployment guidance for submission
 
-## Current Working Flow
+## 🚀 What ChainGuard Does
+
+- Ingests shipment telemetry from REST or MQTT sources
+- Computes hybrid risk scores using both ML and rule-based logic
+- Predicts shipment delays and estimated arrival times
+- Recommends alternate routes when risk becomes elevated
+- Provides human-friendly explanations via Gemini or template fallback
+- Streams live shipment updates to the frontend dashboard
+
+## 🎯 Key Features
+
+- **Hybrid AI Architecture**: Combines XGBoost prediction, rule-based safety checks, and model fallback.
+- **Smart rerouting**: Generates alternate route options when risk exceeds the defined threshold.
+- **Live telemetry**: Supports MQTT ingestion and REST API ingestion.
+- **Fallback reliability**: Works without Gemini, OpenRouteService, or persistent storage.
+- **Demo-ready UI**: Includes a Next.js dashboard with shipment cards, search, and add-shipment workflows.
+
+## 📁 Repository Structure
 
 ```text
-iot-simulator -> Mosquitto MQTT broker -> backend -> MongoDB -> frontend/API consumers
-                                      -> ai-engine inference
+├── AI Solution/                # Main prototype codebase
+│   ├── backend/                # API and real-time backend services
+│   ├── ai-engine/              # Risk scoring, delay prediction, rerouting, explanations
+│   ├── frontend/               # Next.js dashboard and UI
+│   ├── iot-simulator/          # MQTT telemetry publisher and simulator scripts
+│   └── docs/                   # Architecture, flow, and presentation assets
+└── README.md                   # Project overview and starter guide
 ```
 
-## What Is Working
+## 🧭 Quick Start
 
-- backend API is live and health-checkable
-- IoT simulator publishes shipment telemetry over MQTT
-- backend subscribes to MQTT topics and ingests live shipment updates
-- AI engine predictions are used during ingestion
-- MongoDB persistence is active
-
-## Local Setup
-
-### 1. Install backend dependencies
+### 1. Run the backend
 
 ```powershell
-cd "C:\Users\HP\Downloads\Backend AI Google\4-Person-Project\AI Solution\backend"
+cd "AI Solution/backend"
 pip install -r requirements_backend.txt
+python app.py
 ```
 
-### 2. Install AI engine dependencies if needed
+### 2. Run the frontend
 
 ```powershell
-cd "C:\Users\HP\Downloads\Backend AI Google\4-Person-Project\AI Solution\ai-engine"
-pip install -r requirements_ai.txt
+cd "AI Solution/frontend"
+npm install
+npm run dev
 ```
 
-### 3. Install Mosquitto
-
-Download and install Mosquitto from [https://mosquitto.org/download/](https://mosquitto.org/download/).
-
-Check installation:
+### 3. Optional: run the simulator
 
 ```powershell
-& "C:\Program Files\mosquitto\mosquitto.exe" -h
+cd "AI Solution/iot-simulator"
+python mqtt_publisher.py
 ```
 
-Run the broker:
+### 4. Open the dashboard
 
-```powershell
-& "C:\Program Files\mosquitto\mosquitto.exe" -v
-```
+Visit **[http://localhost:3000](http://localhost:3000)** in your browser.
 
-### 4. Configure backend environment
+## 🛠 Environment Configuration
 
-Use `backend/.env.example` as the template and create `backend/.env`.
+Create `AI Solution/backend/.env` using `AI Solution/backend/.env.example` as a starting point.
 
 Minimum recommended values:
 
 ```env
 PORT=5000
 AUTH_REQUIRED=false
-MONGO_URI=mongodb+srv://<username>:<password>@<cluster>/<db>?retryWrites=true&w=majority
-MQTT_ENABLED=true
+MONGO_URI=mongodb://localhost:27017/chainguard
+MQTT_ENABLED=false
 MQTT_BROKER_HOST=127.0.0.1
 MQTT_BROKER_PORT=1883
 MQTT_TOPIC=chainguard/shipments/#
 MQTT_CLIENT_ID=chainguard-backend
 ```
 
-### 5. Start the backend
+## 📦 Deployment Recommendations
 
-```powershell
-cd "C:\Users\HP\Downloads\Backend AI Google\4-Person-Project\AI Solution\backend"
-python app.py
-```
+For a hackathon submission, use hosted services so the prototype can be accessed publicly.
 
-### 6. Start the IoT simulator publisher
+- **Frontend**: Vercel or Firebase Hosting
+- **Backend**: Google Cloud Run
+- **Database**: MongoDB Atlas or Google Cloud Storage
+- **Secrets**: Google Secret Manager or environment variables
 
-Open a second terminal:
+## 📌 Submission Guidance
 
-```powershell
-cd "C:\Users\HP\Downloads\Backend AI Google\4-Person-Project\AI Solution\iot-simulator"
-python mqtt_publisher.py
-```
+Submit the public frontend URL as your live prototype link, along with the GitHub repository URL.
 
-## Useful URLs
+Include notes that the backend supports:
 
-- Health: `http://127.0.0.1:5000/api/health`
-- Shipments: `http://127.0.0.1:5000/api/shipments`
-- Alerts: `http://127.0.0.1:5000/api/alerts`
-- Stats: `http://127.0.0.1:5000/api/stats`
+- `GET /api/health`
+- `GET /api/shipments`
+- `POST /api/ingest`
+- `GET /api/shipments/<shipment_id>/history`
 
-## GitHub Safety Notes
+## 💡 Notes for Developers
 
-- do not commit `backend/.env`
-- commit `backend/.env.example` only
-- `.env`, `**/.env`, logs, and `.vscode/` are already ignored
+- The AI engine entry point is `AI Solution/ai-engine/predictor.py`
+- The backend is implemented in `AI Solution/backend/app.py`
+- The frontend is implemented in `AI Solution/frontend/app/page.js`
 
-## Hackathon Deployment Direction
+## 📘 Additional Documentation
 
-Recommended deployment split:
-
-- frontend: Firebase Hosting
-- backend API: Cloud Run
-- secrets: Google Secret Manager
-- data store: MongoDB Atlas
-- AI service: Gemini / Vertex AI Gemini
-
-For the hackathon submission, the final live prototype link should be the frontend website URL, not the raw backend `/api/health` endpoint.
+See `AI Solution/docs/README.md` for full architecture, setup, and presentation guidance.
