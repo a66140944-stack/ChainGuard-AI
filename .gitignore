@@ -2,14 +2,18 @@
 # Root Environment files
 # ============================
 .env
-.venv
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
+/.venv
+/env/
+/venv/
+/ENV/
+/env.bak/
+/venv.bak/
 .env.local
 .env.*.local
+
+# Node and Next.js artifacts
+node_modules/
+.next/
 
 # ============================
 # Python standard ignores

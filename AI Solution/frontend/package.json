@@ -1,0 +1,19 @@
+{
+  "name": "chainguard-frontend",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "@tailwindcss/postcss": "^4.1.4",
+    "next": "^15.5.15",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "recharts": "^2.15.3",
+    "socket.io-client": "^4.8.1",
+    "tailwindcss": "^4.1.4"
+  }
+}
