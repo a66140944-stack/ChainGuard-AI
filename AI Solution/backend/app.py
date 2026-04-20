@@ -33,6 +33,7 @@ from env_loader import load_environment
 load_environment(BASE_DIR, ROOT_DIR)
 
 from logging_config import configure_logging, get_logger
+from mqtt_subscriber import create_mqtt_client, mqtt_is_enabled
 from security import is_auth_required, parse_allowed_origins
 from db import get_db, get_storage_label, load_current_shipments
 from routes.alert_routes import alert_bp
@@ -71,6 +72,7 @@ def create_app() -> tuple[Flask, SocketIO]:
     app.config["SHIPMENT_STORE"] = shipment_store
     app.config["STORE_LOCK"] = store_lock
     app.config["SOCKETIO"] = socketio
+    app.config["MQTT_STATUS"] = "disabled"
 
     try:
         from predictor import full_prediction as _full_prediction  # noqa: F401
@@ -209,6 +211,7 @@ def heartbeat_loop() -> None:
 def print_banner() -> None:
     db_state = app.config.get("STORAGE_BACKEND", "memory-only")
     ai_state = "connected" if app.config["AI_AVAILABLE"] else "fallback"
+    mqtt_state = app.config.get("MQTT_STATUS", "disabled")
     port = int(os.getenv("PORT", "5000"))
     print("=" * 52)
     print("ChainGuard Backend")
@@ -219,6 +222,7 @@ def print_banner() -> None:
     print(f"Stats:     http://localhost:{port}/api/stats")
     print(f"Database:  {db_state}")
     print(f"AI Engine: {ai_state}")
+    print(f"MQTT:      {mqtt_state}")
     print(f"Auth:      {'required' if app.config['AUTH_REQUIRED'] else 'disabled'}")
     print("=" * 52)
 
@@ -242,16 +246,27 @@ app, socketio = create_app()
 
 
 if __name__ == "__main__":
+    mqtt_client = None
+    if mqtt_is_enabled():
+        mqtt_client = create_mqtt_client(app)
+        if mqtt_client is None and app.config.get("MQTT_STATUS") == "disabled":
+            app.config["MQTT_STATUS"] = "unavailable"
+
     print_banner()
 
     threading.Thread(target=seed_initial_data, daemon=True).start()
     threading.Thread(target=heartbeat_loop, daemon=True).start()
 
-    socketio.run(
-        app,
-        host="0.0.0.0",
-        port=int(os.getenv("PORT", "5000")),
-        debug=os.getenv("FLASK_DEBUG", "false").lower() == "true",
-        use_reloader=False,
-        allow_unsafe_werkzeug=True,
-    )
+    try:
+        socketio.run(
+            app,
+            host="0.0.0.0",
+            port=int(os.getenv("PORT", "5000")),
+            debug=os.getenv("FLASK_DEBUG", "false").lower() == "true",
+            use_reloader=False,
+            allow_unsafe_werkzeug=True,
+        )
+    finally:
+        if mqtt_client is not None:
+            mqtt_client.loop_stop()
+            mqtt_client.disconnect()
