@@ -1,6 +1,6 @@
 export default function Footer() {
   return (
-    <footer id="footer" className="border-t border-white/10 bg-surface/70 backdrop-blur-xl">
+    <footer id="footer" className="border-t border-white/10 bg-background/35 backdrop-blur-xl">
       <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-10 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-sm font-semibold">ChainGuard</p>

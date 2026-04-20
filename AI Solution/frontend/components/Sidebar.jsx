@@ -58,7 +58,7 @@ export default function Sidebar({ onNavigate }) {
 
   return (
     <aside className="w-full lg:w-72 lg:flex-shrink-0">
-      <div className="rounded-3xl border border-white/10 bg-surface p-3 shadow-xl shadow-slate-950/5 backdrop-blur-xl">
+      <div className="cg-glass rounded-3xl border border-white/10 p-3 backdrop-blur-xl">
         <p className="px-3 py-2 text-xs font-semibold uppercase tracking-[0.22em] text-muted">Workspace</p>
         <nav className="mt-2 flex flex-col gap-1">
           {navigationItems.map((item) => {

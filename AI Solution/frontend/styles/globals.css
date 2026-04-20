@@ -6,6 +6,11 @@
   --muted: #64748b;
   --surface: rgba(255, 255, 255, 0.78);
   --surface-strong: #ffffff;
+  --ring: rgba(37, 99, 235, 0.42);
+  --grid: rgba(2, 6, 23, 0.06);
+  --noise: rgba(2, 6, 23, 0.045);
+  --glow: rgba(37, 99, 235, 0.16);
+  --glow-2: rgba(34, 211, 238, 0.14);
 }
 
 .dark {
@@ -14,6 +19,11 @@
   --muted: #94a3b8;
   --surface: rgba(15, 23, 42, 0.74);
   --surface-strong: #0f172a;
+  --ring: rgba(56, 189, 248, 0.38);
+  --grid: rgba(148, 163, 184, 0.08);
+  --noise: rgba(255, 255, 255, 0.04);
+  --glow: rgba(37, 99, 235, 0.22);
+  --glow-2: rgba(34, 211, 238, 0.18);
 }
 
 @theme inline {
@@ -36,10 +46,7 @@ body {
 }
 
 body {
-  background:
-    radial-gradient(circle at top left, rgba(37, 99, 235, 0.18), transparent 24%),
-    radial-gradient(circle at top right, rgba(14, 165, 233, 0.14), transparent 22%),
-    var(--background);
+  background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
@@ -49,10 +56,132 @@ body {
 }
 
 :focus-visible {
-  outline: 2px solid rgba(37, 99, 235, 0.55);
+  outline: 2px solid var(--ring);
   outline-offset: 2px;
 }
 
 ::selection {
   background: rgba(37, 99, 235, 0.18);
+}
+
+/* --- ChainGuard "Hyper-Real" surface system --- */
+@keyframes cg-pan {
+  0% {
+    transform: translate3d(-4%, -2%, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(4%, 2%, 0) scale(1.02);
+  }
+  100% {
+    transform: translate3d(-4%, -2%, 0) scale(1);
+  }
+}
+
+@keyframes cg-shimmer {
+  0% {
+    transform: translateX(-40%);
+    opacity: 0;
+  }
+  25% {
+    opacity: 1;
+  }
+  50% {
+    transform: translateX(40%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(40%);
+    opacity: 0;
+  }
+}
+
+.cg-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.cg-backdrop::before {
+  content: "";
+  position: absolute;
+  inset: -20%;
+  background:
+    radial-gradient(700px 420px at var(--cg-x, 18%) var(--cg-y, 12%), var(--glow), transparent 62%),
+    radial-gradient(540px 360px at calc(var(--cg-x, 18%) + 20%) calc(var(--cg-y, 12%) + 22%), var(--glow-2), transparent 60%),
+    radial-gradient(520px 340px at 92% 10%, rgba(245, 158, 11, 0.10), transparent 60%),
+    radial-gradient(580px 380px at 8% 92%, rgba(99, 102, 241, 0.10), transparent 60%);
+  filter: saturate(1.1);
+  opacity: 0.95;
+  animation: cg-pan 16s ease-in-out infinite;
+}
+
+.cg-backdrop::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    repeating-linear-gradient(90deg, transparent, transparent 18px, var(--grid) 19px),
+    repeating-linear-gradient(0deg, transparent, transparent 18px, var(--grid) 19px);
+  mask-image: radial-gradient(circle at center, rgba(0, 0, 0, 0.75), transparent 70%);
+  opacity: 0.55;
+}
+
+.cg-noise {
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(circle at 20% 10%, var(--noise), transparent 34%),
+    radial-gradient(circle at 80% 20%, var(--noise), transparent 36%),
+    radial-gradient(circle at 30% 78%, var(--noise), transparent 36%),
+    radial-gradient(circle at 70% 85%, var(--noise), transparent 36%);
+  mix-blend-mode: overlay;
+  opacity: 0.65;
+}
+
+.cg-glass {
+  position: relative;
+  background: var(--surface);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.35) inset,
+    0 22px 60px rgba(2, 6, 23, 0.10);
+}
+
+.cg-glass::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.55), transparent 46%);
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.cg-shine {
+  position: relative;
+  overflow: hidden;
+}
+
+.cg-shine::before {
+  content: "";
+  position: absolute;
+  inset: -40% -60%;
+  background: linear-gradient(110deg, transparent 40%, rgba(255, 255, 255, 0.35) 50%, transparent 60%);
+  transform: translateX(-40%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.cg-shine:hover::before {
+  animation: cg-shimmer 1.2s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cg-backdrop::before {
+    animation: none;
+  }
+  .cg-shine:hover::before {
+    animation: none;
+  }
 }
