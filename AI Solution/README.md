@@ -1,54 +1,116 @@
 # ChainGuard
 
-ChainGuard is a 4-part logistics intelligence project for hackathon/demo use. The repository currently contains:
+ChainGuard is an AI-assisted logistics risk monitoring system built for hackathon/demo use. It combines live shipment telemetry, MQTT-based ingestion, backend risk analysis, rerouting support, and AI-generated operational explanations.
 
-- `backend/`: the most complete part of the project, with Flask APIs, Socket.IO, persistence adapters, and AI-engine integration
-- `ai-engine/`: model training, risk scoring, rerouting, and Gemini explanation modules
-- `frontend/`: dashboard scaffold and static assets
-- `iot-simulator/`: simulator scaffold for shipment telemetry
-- `docs/`: architecture images
+## Project Modules
 
-## Current State
+- `backend/`: Flask API, Socket.IO updates, MongoDB/GCS persistence, MQTT subscriber, and AI-engine integration
+- `ai-engine/`: prediction, rerouting, and Gemini explanation logic
+- `iot-simulator/`: shipment telemetry generator and MQTT publisher
+- `frontend/`: dashboard scaffold for the web prototype
+- `docs/`: supporting architecture and presentation assets
 
-- The backend is the primary working application layer.
-- The AI engine contains real processing logic and can be called by the backend.
-- The frontend and IoT simulator folders are still mostly scaffolding in this snapshot.
+## Current Working Flow
 
-## Recommended Setup
+```text
+iot-simulator -> Mosquitto MQTT broker -> backend -> MongoDB -> frontend/API consumers
+                                      -> ai-engine inference
+```
 
-Install the backend dependencies:
+## What Is Working
+
+- backend API is live and health-checkable
+- IoT simulator publishes shipment telemetry over MQTT
+- backend subscribes to MQTT topics and ingests live shipment updates
+- AI engine predictions are used during ingestion
+- MongoDB persistence is active
+
+## Local Setup
+
+### 1. Install backend dependencies
 
 ```powershell
 cd "C:\Users\HP\Downloads\Backend AI Google\4-Person-Project\AI Solution\backend"
 pip install -r requirements_backend.txt
 ```
 
-If you want the AI engine training environment as well:
+### 2. Install AI engine dependencies if needed
 
 ```powershell
 cd "C:\Users\HP\Downloads\Backend AI Google\4-Person-Project\AI Solution\ai-engine"
 pip install -r requirements_ai.txt
 ```
 
-## Backend Environment
+### 3. Install Mosquitto
 
-Start from:
+Download and install Mosquitto from [https://mosquitto.org/download/](https://mosquitto.org/download/).
 
-```text
-backend/.env.example
+Check installation:
+
+```powershell
+& "C:\Program Files\mosquitto\mosquitto.exe" -h
 ```
 
-Then create:
+Run the broker:
 
-```text
-backend/.env
+```powershell
+& "C:\Program Files\mosquitto\mosquitto.exe" -v
 ```
 
-For Atlas, use a `mongodb+srv://...` connection string in `MONGO_URI`.
+### 4. Configure backend environment
 
-## GitHub Readiness Notes
+Use `backend/.env.example` as the template and create `backend/.env`.
 
-- Do not commit `backend/.env`
-- Rotate any secrets that were previously pasted into chat or committed locally
-- The repo uses backend-owned fallback seed data because `iot-simulator/` is currently empty
-- Routing works with OpenRouteService, Google Maps, or a built-in calculated fallback
+Minimum recommended values:
+
+```env
+PORT=5000
+AUTH_REQUIRED=false
+MONGO_URI=mongodb+srv://<username>:<password>@<cluster>/<db>?retryWrites=true&w=majority
+MQTT_ENABLED=true
+MQTT_BROKER_HOST=127.0.0.1
+MQTT_BROKER_PORT=1883
+MQTT_TOPIC=chainguard/shipments/#
+MQTT_CLIENT_ID=chainguard-backend
+```
+
+### 5. Start the backend
+
+```powershell
+cd "C:\Users\HP\Downloads\Backend AI Google\4-Person-Project\AI Solution\backend"
+python app.py
+```
+
+### 6. Start the IoT simulator publisher
+
+Open a second terminal:
+
+```powershell
+cd "C:\Users\HP\Downloads\Backend AI Google\4-Person-Project\AI Solution\iot-simulator"
+python mqtt_publisher.py
+```
+
+## Useful URLs
+
+- Health: `http://127.0.0.1:5000/api/health`
+- Shipments: `http://127.0.0.1:5000/api/shipments`
+- Alerts: `http://127.0.0.1:5000/api/alerts`
+- Stats: `http://127.0.0.1:5000/api/stats`
+
+## GitHub Safety Notes
+
+- do not commit `backend/.env`
+- commit `backend/.env.example` only
+- `.env`, `**/.env`, logs, and `.vscode/` are already ignored
+
+## Hackathon Deployment Direction
+
+Recommended deployment split:
+
+- frontend: Firebase Hosting
+- backend API: Cloud Run
+- secrets: Google Secret Manager
+- data store: MongoDB Atlas
+- AI service: Gemini / Vertex AI Gemini
+
+For the hackathon submission, the final live prototype link should be the frontend website URL, not the raw backend `/api/health` endpoint.
