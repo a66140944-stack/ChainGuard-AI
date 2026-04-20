@@ -24,7 +24,9 @@ except Exception:
 
 BASE_DIR = Path(__file__).resolve().parents[1]
 ROOT_DIR = BASE_DIR.parent
+CONFIG_DIR = BASE_DIR / "config"
 sys.path.insert(0, str(BASE_DIR))
+sys.path.insert(0, str(CONFIG_DIR))
 
 from env_loader import load_environment
 
@@ -149,21 +151,25 @@ def _try_gcs():
 def _save_to_mongodb(database, payload: dict[str, Any]) -> None:
     payload["_mongo_timestamp"] = time.time()
     try:
-        database["readings"].insert_one(payload)
+        reading_document = dict(payload)
+        shipment_document = dict(payload)
+        shipment_document.pop("_id", None)
+
+        database["readings"].insert_one(reading_document)
         database["shipments"].update_one(
-            {"shipment_id": payload["shipment_id"]},
-            {"$set": payload},
+            {"shipment_id": shipment_document["shipment_id"]},
+            {"$set": shipment_document},
             upsert=True,
         )
-        if payload.get("action") != "MONITOR":
+        if shipment_document.get("action") != "MONITOR":
             database["alerts"].insert_one(
                 {
-                    "shipment_id": payload["shipment_id"],
-                    "priority": payload.get("priority", "LOW"),
-                    "risk_score": payload.get("risk_score", 0.0),
-                    "action": payload.get("action", "MONITOR"),
-                    "timestamp": payload.get("timestamp"),
-                    "message": payload.get("gemini_explanation", ""),
+                    "shipment_id": shipment_document["shipment_id"],
+                    "priority": shipment_document.get("priority", "LOW"),
+                    "risk_score": shipment_document.get("risk_score", 0.0),
+                    "action": shipment_document.get("action", "MONITOR"),
+                    "timestamp": shipment_document.get("timestamp"),
+                    "message": shipment_document.get("gemini_explanation", ""),
                 }
             )
     except Exception as exc:

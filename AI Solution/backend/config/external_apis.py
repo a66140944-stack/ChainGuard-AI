@@ -14,7 +14,9 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parents[1]
 ROOT_DIR = BASE_DIR.parent
+CONFIG_DIR = BASE_DIR / "config"
 sys.path.insert(0, str(BASE_DIR))
+sys.path.insert(0, str(CONFIG_DIR))
 
 from env_loader import load_environment
 
