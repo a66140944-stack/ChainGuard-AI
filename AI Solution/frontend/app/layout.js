@@ -1,4 +1,5 @@
 import "../styles/globals.css";
+import "leaflet/dist/leaflet.css";
 import { ShipmentContextProvider } from "../context/ShipmentContext.jsx";
 import HyperBackdrop from "../components/HyperBackdrop.jsx";
 import { Inter } from "next/font/google";
