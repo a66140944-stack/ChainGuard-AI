@@ -1,6 +1,7 @@
 "use client";
 
 import DashboardShell from "../../components/DashboardShell.jsx";
+import LiveGpsLeafletMap from "../../components/LiveGpsLeafletMap.jsx";
 import { useShipments } from "../../context/ShipmentContext.jsx";
 
 function DetailCard({ label, value, tone = "default" }) {
@@ -76,20 +77,8 @@ export default function TrackPage() {
               </span>
             </div>
 
-            <div className="mt-6 rounded-[28px] border border-white/10 bg-slate-950 p-6 text-slate-100">
-              <div className="flex items-center justify-between text-sm text-slate-300">
-                <span>{selectedShipment.fromLocation}</span>
-                <span>{selectedShipment.toLocation}</span>
-              </div>
-              <div className="relative mt-8 h-44 overflow-hidden rounded-[24px] border border-cyan-400/20 bg-[radial-gradient(circle_at_center,rgba(34,211,238,0.12),transparent_55%)]">
-                <div className="absolute left-10 right-10 top-1/2 h-[3px] -translate-y-1/2 rounded-full bg-cyan-400/20" />
-                <div className="absolute left-10 top-1/2 h-[3px] w-[62%] -translate-y-1/2 rounded-full bg-cyan-400 shadow-[0_0_18px_rgba(34,211,238,0.65)]" />
-                <div className="absolute left-10 top-1/2 h-4 w-4 -translate-y-1/2 rounded-full border-4 border-slate-950 bg-cyan-300" />
-                <div className="absolute right-10 top-1/2 h-4 w-4 -translate-y-1/2 rounded-full border-4 border-slate-950 bg-cyan-300" />
-                <div className="absolute left-[62%] top-1/2 h-5 w-5 -translate-y-1/2 rounded-full bg-cyan-300 shadow-[0_0_0_8px_rgba(34,211,238,0.18)]" />
-                <div className="absolute left-[62%] top-1/2 h-5 w-5 -translate-y-1/2 animate-ping rounded-full bg-cyan-300/60" />
-                <div className="absolute bottom-5 left-10 rounded-full bg-slate-900/80 px-3 py-1 text-xs">{selectedShipment.currentLocation.label}</div>
-              </div>
+            <div className="mt-6">
+              <LiveGpsLeafletMap />
             </div>
           </div>
 
