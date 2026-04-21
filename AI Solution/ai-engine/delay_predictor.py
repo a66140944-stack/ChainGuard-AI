@@ -87,6 +87,11 @@ def _load_delay_model():
     model_path = os.path.join(os.path.dirname(__file__), "models", "delay_model.pkl")
     if os.path.exists(model_path):
         _model_bundle = joblib.load(model_path)
+        if hasattr(_model_bundle.get("model"), "set_params"):
+            try:
+                _model_bundle["model"].set_params(device="cpu")
+            except Exception:
+                pass
     return _model_bundle
 
 

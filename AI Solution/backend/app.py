@@ -256,6 +256,9 @@ if __name__ == "__main__":
 
     threading.Thread(target=seed_initial_data, daemon=True).start()
     threading.Thread(target=heartbeat_loop, daemon=True).start()
+    
+    from sheet_poller import start_sheet_poller
+    start_sheet_poller(app, socketio)
 
     try:
         socketio.run(

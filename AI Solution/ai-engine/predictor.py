@@ -101,6 +101,11 @@ def _load_risk_model():
     path = os.path.join(os.path.dirname(__file__), "models", "risk_model.pkl")
     if os.path.exists(path):
         _risk_model_data = joblib.load(path)
+        if hasattr(_risk_model_data.get("model"), "set_params"):
+            try:
+                _risk_model_data["model"].set_params(device="cpu")
+            except Exception:
+                pass
     return _risk_model_data
 
 
