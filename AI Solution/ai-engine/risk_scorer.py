@@ -6,9 +6,19 @@ Always available even if ML model files are missing.
 from __future__ import annotations
 
 
+def _get_temperature_c(reading: dict) -> float:
+    if "temperature_c" in reading:
+        return float(reading.get("temperature_c", 24.0))
+    if "initial_temperature_c" in reading:
+        return float(reading.get("initial_temperature_c", 24.0))
+    if "truck_temperature_c" in reading:
+        return float(reading.get("truck_temperature_c", 24.0))
+    return 24.0
+
+
 def calculate_risk(reading: dict) -> dict:
     speed = float(reading.get("speed_kmh", 60))
-    temp = float(reading.get("temperature_c", 24))
+    temp = _get_temperature_c(reading)
     battery = float(reading.get("battery_pct", 80))
     signal = float(reading.get("signal_strength", 80))
     external_event = reading.get("external_event") or {}

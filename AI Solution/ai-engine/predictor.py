@@ -38,6 +38,16 @@ FEATURES = [
 ]
 
 
+def _get_temperature_c(reading: dict) -> float:
+    if "temperature_c" in reading:
+        return float(reading.get("temperature_c", 24.0))
+    if "initial_temperature_c" in reading:
+        return float(reading.get("initial_temperature_c", 24.0))
+    if "truck_temperature_c" in reading:
+        return float(reading.get("truck_temperature_c", 24.0))
+    return 24.0
+
+
 def _extract_hour(reading: dict) -> int:
     ts = reading.get("timestamp", "")
     if "T" in ts:
@@ -50,7 +60,7 @@ def _extract_hour(reading: dict) -> int:
 
 def _compute_rule_risk_score_proxy(reading: dict) -> float:
     speed = float(reading.get("speed_kmh", 60.0))
-    temp = float(reading.get("temperature_c", 24.0))
+    temp = _get_temperature_c(reading)
     battery = float(reading.get("battery_pct", 80.0))
     route = float(reading.get("route_quality", 0.0))
     ext = reading.get("external_event") or {}
@@ -79,7 +89,7 @@ def _build_feature_vector(reading: dict, rule_risk_score: float | None = None) -
         rule_risk_score = float(reading.get("rule_risk_score", _compute_rule_risk_score_proxy(reading)))
     return np.array([[
         float(reading.get("speed_kmh", 60.0)),
-        float(reading.get("temperature_c", 24.0)),
+        _get_temperature_c(reading),
         float(reading.get("battery_pct", 80.0)),
         float(reading.get("humidity_pct", 50.0)),
         float(reading.get("signal_strength", 80.0)),

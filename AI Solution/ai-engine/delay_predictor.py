@@ -29,6 +29,16 @@ FEATURES = [
 _model_bundle = None
 
 
+def _get_temperature_c(reading: dict) -> float:
+    if "temperature_c" in reading:
+        return float(reading.get("temperature_c", 24.0))
+    if "initial_temperature_c" in reading:
+        return float(reading.get("initial_temperature_c", 24.0))
+    if "truck_temperature_c" in reading:
+        return float(reading.get("truck_temperature_c", 24.0))
+    return 24.0
+
+
 def _extract_hour(reading: dict) -> int:
     ts = reading.get("timestamp", "")
     if "T" in ts:
@@ -65,7 +75,7 @@ def _build_feature_vector(reading: dict) -> np.ndarray:
         rule_risk_score = min(1.0, max(0.0, score))
     return np.array([[
         float(reading.get("speed_kmh", 60.0)),
-        float(reading.get("temperature_c", 24.0)),
+        _get_temperature_c(reading),
         float(reading.get("battery_pct", 80.0)),
         float(reading.get("humidity_pct", 50.0)),
         float(reading.get("signal_strength", 80.0)),
