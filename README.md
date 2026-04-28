@@ -1,116 +1,115 @@
-# ChainGuard: Intelligent Supply Chain AI Prototype 🚚🤖
+# ChainGuard (ChainGuard AI Supply Chain Monitor)
 
-ChainGuard is an AI-powered supply chain monitoring platform built to help logistics operations teams detect risk, predict delays, and recommend smarter routes in real time.
+ChainGuard is a hackathon-ready, end-to-end prototype for real-time shipment monitoring. It ingests GPS + sensor telemetry, runs an AI pipeline (risk score, delay prediction, rerouting decision, and Gemini explanation), and streams the results to a live operations dashboard.
 
-This repository contains the full prototype for a hackathon-ready logistics solution, including:
+This repo is structured for a 4-person build:
+- Person A: IoT simulator (telemetry generation / MQTT)
+- Person B: Backend (Flask + Socket.IO, APIs, integrations)
+- Person C: AI engine (ML models + rule-based fallback + Gemini explainer)
+- Person D: Frontend (Next.js dashboard)
 
-- a **Flask backend** with telemetry ingestion, risk scoring, and Socket.IO updates
-- an **AI engine** for risk classification, delay estimation, and rerouting
-- a **Next.js frontend** dashboard for operations visibility
-- an **IoT simulator** for publishing sample shipment telemetry via MQTT
-- documentation and deployment guidance for submission
+## Problem Statement
+Supply chains fail quietly. Small issues (speed drops, temperature drift, low tracker battery, bad weather) escalate into major delays and spoilage before a human notices. Operations teams need:
+- Live visibility (not end-of-day reports)
+- Early warnings (not post-mortems)
+- Actionable guidance (not just dashboards)
 
-## 🚀 What ChainGuard Does
+## Solution
+ChainGuard turns raw telemetry into decisions:
+- Risk score (0.0 to 1.0) and category (SAFE / WARNING / CRITICAL)
+- Delay prediction (minutes)
+- ETA impact and suggested action (MONITOR / RECOMMEND_REROUTE / AUTO_REROUTE)
+- Route alternatives using OpenRouteService (fallback to mock when key missing)
+- Gemini explanation (Google AI) for human-readable operational guidance
 
-- Ingests shipment telemetry from REST or MQTT sources
-- Computes hybrid risk scores using both ML and rule-based logic
-- Predicts shipment delays and estimated arrival times
-- Recommends alternate routes when risk becomes elevated
-- Provides human-friendly explanations via Gemini or template fallback
-- Streams live shipment updates to the frontend dashboard
+## Google Technologies Used (Judging)
+- Gemini API: natural-language explanations for operational alerts (`GEMINI_API_KEY`)
+- Google Cloud Run (recommended): backend deployment target for the Flask API
+- Optional: Google Maps Routes API support exists in the backend as a fallback if configured (`GOOGLE_MAPS_KEY`)
 
-## 🎯 Key Features
-
-- **Hybrid AI Architecture**: Combines XGBoost prediction, rule-based safety checks, and model fallback.
-- **Smart rerouting**: Generates alternate route options when risk exceeds the defined threshold.
-- **Live telemetry**: Supports MQTT ingestion and REST API ingestion.
-- **Fallback reliability**: Works without Gemini, OpenRouteService, or persistent storage.
-- **Demo-ready UI**: Includes a Next.js dashboard with shipment cards, search, and add-shipment workflows.
-
-## 📁 Repository Structure
-
+## Repository Layout
 ```text
-├── AI Solution/                # Main prototype codebase
-│   ├── backend/                # API and real-time backend services
-│   ├── ai-engine/              # Risk scoring, delay prediction, rerouting, explanations
-│   ├── frontend/               # Next.js dashboard and UI
-│   ├── iot-simulator/          # MQTT telemetry publisher and simulator scripts
-│   └── docs/                   # Architecture, flow, and presentation assets
-└── README.md                   # Project overview and starter guide
+ai-engine/          ML + rules + rerouting + Gemini explainer
+backend/            Flask API, Socket.IO, ingestion, storage
+frontend/           Next.js operations dashboard
+iot-simulator/      Local simulator utilities (optional)
+docs/               Architecture, setup, and submission docs
 ```
 
-## 🧭 Quick Start
+## Architecture (1-minute read)
+```mermaid
+graph TD
+  A["IoT Simulator (Virtual ESP32)"] -->|"REST: /api/ingest"| B["Flask Backend + Socket.IO"]
+  B -->|"calls"| C["AI Engine (predictor.py)"]
+  C -->|"risk, delay, eta, reroute, gemini"| B
+  B -->|"socket events"| D["Next.js Dashboard (Tracking)"]
+```
 
-### 1. Run the backend
+## Demo (Judges)
+- Track Shipment -> Open IoT Simulator -> change telemetry -> observe AI + rerouting update live.
+- Add a screenshot or GIF here before submitting (judges decide fast):
+  - `docs/assets/dashboard.png`
 
+![Dashboard](docs/assets/dashboard.png)
+
+## Quick Start (Windows / PowerShell)
+### 1. Backend
 ```powershell
-cd "AI Solution/backend"
+cd "backend"
 pip install -r requirements_backend.txt
 python app.py
 ```
-
-### 2. Run the frontend
-
-```powershell
-cd "AI Solution/frontend"
-npm install
-npm run dev
-```
-
-### 3. Optional: run the simulator
-
-```powershell
-cd "AI Solution/iot-simulator"
-python mqtt_publisher.py
-```
-
-### 4. Open the dashboard
-
-Visit **[http://localhost:3000](http://localhost:3000)** in your browser.
-
-## 🛠 Environment Configuration
-
-Create `AI Solution/backend/.env` using `AI Solution/backend/.env.example` as a starting point.
-
-Minimum recommended values:
-
-```env
-PORT=5000
-AUTH_REQUIRED=false
-MONGO_URI=mongodb://localhost:27017/chainguard
-MQTT_ENABLED=false
-MQTT_BROKER_HOST=127.0.0.1
-MQTT_BROKER_PORT=1883
-MQTT_TOPIC=chainguard/shipments/#
-MQTT_CLIENT_ID=chainguard-backend
-```
-
-## 📦 Deployment Recommendations
-
-For a hackathon submission, use hosted services so the prototype can be accessed publicly.
-
-- **Frontend**: Vercel or Firebase Hosting
-- **Backend**: Google Cloud Run
-- **Database**: MongoDB Atlas or Google Cloud Storage
-- **Secrets**: Google Secret Manager or environment variables
-
-## 📌 Submission Guidance
-
-Submit the public frontend URL as your live prototype link, along with the GitHub repository URL.
-
-Include notes that the backend supports:
-
+Backend endpoints:
 - `GET /api/health`
 - `GET /api/shipments`
 - `POST /api/ingest`
-- `GET /api/shipments/<shipment_id>/history`
 
-## 💡 Notes for Developers
+### 2. Frontend
+```powershell
+cd "frontend"
+npm.cmd install
+npm.cmd run dev
+```
+Open:
+- `http://localhost:3000/login`
 
-- The AI engine entry point is `AI Solution/ai-engine/predictor.py`
-- The backend is implemented in `AI Solution/backend/app.py`
-- The frontend is implemented in `AI Solution/frontend/app/page.js`
+Note: Auth is demo-mode (localStorage) so judges can sign up and start immediately.
 
-## 📘 Additional Documentation
+### 3. Demo Telemetry (Judge Flow)
+1. Login
+2. Add a shipment (Dashboard)
+3. Open Track Shipment
+4. Click "Open IoT Simulator"
+5. Change temperature/speed/location
+6. Watch AI risk, delay, ETA, reroute, and Gemini explanation update live
 
-See `AI Solution/docs/README.md` for full architecture, setup, and presentation guidance.
+## Environment Keys (Recommended)
+Create `backend/.env` (see `.env.example`):
+```env
+AUTH_REQUIRED=false
+ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
+
+# Google AI (Gemini)
+GEMINI_API_KEY=your_key_here
+
+# Routing
+OPEN_ROUTE_SERVICE_KEY=your_key_here
+
+# Weather
+OPEN_WEATHER_KEY=your_key_here
+```
+
+## Model Training (Optional)
+The AI engine includes training scripts and supports both synthetic datasets and external CSV datasets.
+See:
+- `ai-engine/train.py`
+- `docs/model.md`
+
+## Deployment (Recommended for Hackathons)
+- Frontend: Firebase Hosting or Vercel
+- Backend: Google Cloud Run
+- Secrets: environment variables (or Secret Manager)
+
+## Documentation
+Start here:
+- `docs/README.md`

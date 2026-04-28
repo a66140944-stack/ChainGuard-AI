@@ -1,0 +1,1076 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ChainGuard IoT Simulator | Supply Chain Intelligence</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
+
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: #05050f;
+        color: #eff0f5;
+      }
+
+      .navbar {
+        background: rgba(5, 5, 15, 0.95);
+        backdrop-filter: blur(10px);
+        padding: 1rem 2rem;
+        border-bottom: 1px solid #5f7af2;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        flex-wrap: wrap;
+      }
+
+      .logo {
+        font-size: 1.5rem;
+        font-weight: bold;
+        background: linear-gradient(135deg, #b6b9ff, #5f7af2);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+      }
+
+      .btn-primary {
+        background: linear-gradient(95deg, #5f7af2, #3c4db0);
+        border: none;
+        padding: 0.5rem 1.2rem;
+        border-radius: 40px;
+        color: white;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s;
+      }
+
+      .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 20px rgba(95, 122, 242, 0.4);
+      }
+
+      .btn-outline {
+        background: transparent;
+        border: 1px solid #5f7af2;
+        padding: 0.5rem 1.2rem;
+        border-radius: 40px;
+        color: white;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s;
+      }
+
+      .btn-outline:hover {
+        background: rgba(95, 122, 242, 0.2);
+      }
+
+      .btn-danger {
+        background: rgba(220, 60, 60, 0.3);
+        border: 1px solid #ff6464;
+        color: #ff6464;
+      }
+
+      .btn-danger:hover {
+        background: rgba(220, 60, 60, 0.5);
+      }
+
+      .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 1rem;
+      }
+
+      .glass-card {
+        background: rgba(15, 15, 35, 0.6);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(95, 122, 242, 0.3);
+        border-radius: 1rem;
+        padding: 1.2rem;
+      }
+
+      .grid-2 {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: 1.2rem;
+      }
+
+      .grid-4 {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1rem;
+      }
+
+      .stat-card {
+        background: linear-gradient(
+          135deg,
+          rgba(26, 26, 58, 0.8),
+          rgba(15, 15, 35, 0.9)
+        );
+        border-radius: 1rem;
+        padding: 1rem;
+        text-align: center;
+        border: 1px solid rgba(95, 122, 242, 0.3);
+      }
+
+      .stat-value {
+        font-size: 1.8rem;
+        font-weight: bold;
+        color: #aab3ff;
+      }
+
+      .input-group {
+        margin-bottom: 1rem;
+      }
+
+      .input-group label {
+        display: block;
+        margin-bottom: 0.3rem;
+        font-size: 0.85rem;
+        color: #aab3ff;
+      }
+
+      .input-group input,
+      .input-group select {
+        width: 100%;
+        padding: 0.6rem;
+        background: rgba(26, 26, 58, 0.8);
+        border: 1px solid rgba(95, 122, 242, 0.4);
+        border-radius: 0.5rem;
+        color: white;
+        font-size: 0.9rem;
+      }
+
+      .input-group input:focus,
+      .input-group select:focus {
+        outline: none;
+        border-color: #5f7af2;
+      }
+
+      #map {
+        height: 350px;
+        border-radius: 0.8rem;
+        background: #0a0a1a;
+      }
+
+      .chart-container {
+        height: 250px;
+      }
+
+      .data-table {
+        max-height: 250px;
+        overflow-y: auto;
+      }
+
+      .data-table table {
+        width: 100%;
+        font-size: 0.7rem;
+      }
+
+      .data-table th {
+        text-align: left;
+        padding: 0.5rem;
+        background: #0f0f2a;
+        position: sticky;
+        top: 0;
+        color: #aab3ff;
+      }
+
+      .data-table td {
+        padding: 0.3rem 0.5rem;
+        border-bottom: 1px solid rgba(95, 122, 242, 0.15);
+      }
+
+      .alert-badge {
+        background: rgba(255, 100, 100, 0.2);
+        border-left: 3px solid #ff6464;
+        padding: 0.5rem;
+        margin: 0.3rem 0;
+        border-radius: 0.5rem;
+        font-size: 0.8rem;
+      }
+
+      .status-indicator {
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        margin-right: 0.5rem;
+      }
+
+      .status-online {
+        background: #4caf50;
+        box-shadow: 0 0 5px #4caf50;
+      }
+
+      .status-offline {
+        background: #ff6464;
+      }
+
+      hr {
+        border-color: rgba(95, 122, 242, 0.2);
+        margin: 1rem 0;
+      }
+
+      @media (max-width: 768px) {
+        .stat-value {
+          font-size: 1.2rem;
+        }
+        .navbar {
+          flex-direction: column;
+          gap: 0.5rem;
+          text-align: center;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="navbar">
+      <div class="logo">
+        <i class="fas fa-microchip"></i> ChainGuard IoT Simulator
+      </div>
+      <div>
+        <span id="backendStatus" style="font-size: 0.7rem; margin-right: 1rem">
+          <span class="status-indicator" id="statusLed"></span> Backend:
+          <span id="backendText">Connecting...</span>
+        </span>
+        <button class="btn-outline" onclick="exportCSV()">
+          <i class="fas fa-download"></i> Export CSV
+        </button>
+      </div>
+    </nav>
+
+    <div class="container">
+      <div
+        class="glass-card"
+        style="margin-bottom: 1rem; background: rgba(95, 122, 242, 0.1)"
+      >
+        <div
+          style="
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+          "
+        >
+          <div>
+            <i class="fas fa-user"></i>
+            <strong id="userNameDisplay">Guest User</strong>
+            <span style="margin: 0 1rem">|</span>
+            <i class="fas fa-box"></i> Shipment:
+            <strong id="shipmentDisplay">Not Set</strong>
+          </div>
+          <div>
+            <i class="fas fa-cloud-upload-alt"></i> Ingested:
+            <span id="syncCount">0</span> records
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="glass-card">
+          <h3><i class="fas fa-sliders-h"></i> Simulation Controls</h3>
+          <p style="font-size: 0.7rem; color: #8a96e0; margin: 0.5rem 0">
+            All fields are optional - leave empty for auto-generation
+          </p>
+
+          <div class="input-group">
+            <label><i class="fas fa-battery-full"></i> Battery (%)</label>
+            <input
+              type="number"
+              id="inputBattery"
+              min="0"
+              max="100"
+              step="1"
+              placeholder="Auto (60-100%)"
+            />
+          </div>
+
+          <div class="input-group">
+            <label><i class="fas fa-thermometer-half"></i> Temperature (°C)</label>
+            <input
+              type="number"
+              id="inputTemp"
+              step="0.5"
+              placeholder="Auto (-5 to 35°C)"
+            />
+          </div>
+
+          <div class="input-group">
+            <label><i class="fas fa-tint"></i> Humidity (%)</label>
+            <input
+              type="number"
+              id="inputHumidity"
+              min="0"
+              max="100"
+              step="1"
+              placeholder="Auto (20-80%)"
+            />
+          </div>
+
+          <div class="input-group">
+            <label><i class="fas fa-running"></i> Motion Status</label>
+            <select id="inputMotion">
+              <option value="">Auto (Random)</option>
+              <option value="true">Moving</option>
+              <option value="false">Stationary</option>
+            </select>
+          </div>
+
+          <div class="input-group">
+            <label><i class="fas fa-map-marker-alt"></i> Location (lat, lng)</label>
+            <input
+              type="text"
+              id="inputLocation"
+              placeholder="e.g., 28.6139,77.2090 or leave empty"
+            />
+          </div>
+
+          <div style="display: flex; gap: 0.5rem; margin-top: 1rem">
+            <button class="btn-primary" id="startBtn" style="flex: 1">
+              <i class="fas fa-play"></i> Start Simulation
+            </button>
+            <button
+              class="btn-outline btn-danger"
+              id="stopBtn"
+              style="flex: 1"
+              disabled
+            >
+              <i class="fas fa-stop"></i> Stop
+            </button>
+          </div>
+
+          <hr />
+
+          <h4><i class="fas fa-flask"></i> Demo Scenarios</h4>
+          <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.5rem">
+            <button class="btn-outline" onclick="runDemo('normal')" style="font-size: 0.75rem">Normal Delivery</button>
+            <button class="btn-outline" onclick="runDemo('delayed')" style="font-size: 0.75rem">Delayed Shipment</button>
+            <button class="btn-outline" onclick="runDemo('coldchain')" style="font-size: 0.75rem">Cold Chain Failure</button>
+          </div>
+        </div>
+
+        <div class="glass-card">
+          <h3><i class="fas fa-chart-line"></i> Live Telemetry</h3>
+          <div class="grid-4" style="margin-top: 0.8rem">
+            <div class="stat-card">
+              <i class="fas fa-battery-full"></i>
+              <div class="stat-value" id="liveBattery">--%</div>
+              <div style="font-size: 0.7rem">Battery</div>
+            </div>
+            <div class="stat-card">
+              <i class="fas fa-thermometer-half"></i>
+              <div class="stat-value" id="liveTemp">--°C</div>
+              <div style="font-size: 0.7rem">Temperature</div>
+            </div>
+            <div class="stat-card">
+              <i class="fas fa-tint"></i>
+              <div class="stat-value" id="liveHumidity">--%</div>
+              <div style="font-size: 0.7rem">Humidity</div>
+            </div>
+            <div class="stat-card">
+              <i class="fas fa-running"></i>
+              <div class="stat-value" id="liveMotion">--</div>
+              <div style="font-size: 0.7rem">Motion</div>
+            </div>
+          </div>
+
+          <div
+            style="
+              margin-top: 1rem;
+              padding: 0.5rem;
+              background: rgba(0, 0, 0, 0.3);
+              border-radius: 0.5rem;
+              text-align: center;
+              font-size: 0.7rem;
+            "
+          >
+            <i class="fas fa-cloud"></i> Backend Ingest:
+            <span id="cloudStatus">Ready</span>
+            <span style="margin: 0 0.5rem">|</span>
+            <i class="fas fa-chart-bar"></i> Data Points:
+            <span id="dataPointCount">0</span>
+          </div>
+
+          <hr />
+
+          <h3><i class="fas fa-brain"></i> AI Predictions</h3>
+          <p style="font-size: 0.7rem; color: #8a96e0; margin: 0.5rem 0">
+            Updated after every ingest. Uses ML models + rules, rerouting engine, and Gemini explanation (if configured).
+          </p>
+
+          <div class="grid-4" style="margin-top: 0.8rem">
+            <div class="stat-card">
+              <i class="fas fa-exclamation-triangle"></i>
+              <div class="stat-value" id="aiRiskScore">--</div>
+              <div style="font-size: 0.7rem">Risk</div>
+            </div>
+            <div class="stat-card">
+              <i class="fas fa-shield-alt"></i>
+              <div class="stat-value" id="aiRiskCategory">--</div>
+              <div style="font-size: 0.7rem">Category</div>
+            </div>
+            <div class="stat-card">
+              <i class="fas fa-clock"></i>
+              <div class="stat-value" id="aiDelay">--</div>
+              <div style="font-size: 0.7rem">Delay</div>
+            </div>
+            <div class="stat-card">
+              <i class="fas fa-route"></i>
+              <div class="stat-value" id="aiAction">--</div>
+              <div style="font-size: 0.7rem">Action</div>
+            </div>
+          </div>
+
+          <div
+            style="
+              margin-top: 0.9rem;
+              padding: 0.75rem;
+              border: 1px solid rgba(95, 122, 242, 0.25);
+              border-radius: 0.8rem;
+              background: rgba(26, 26, 58, 0.55);
+              font-size: 0.85rem;
+              line-height: 1.4;
+            "
+          >
+            <div style="display: flex; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap">
+              <div>
+                <div style="font-size: 0.7rem; color: #aab3ff; text-transform: uppercase; letter-spacing: 0.12em">
+                  ETA
+                </div>
+                <div id="aiEtaText" style="font-weight: 700">--</div>
+              </div>
+              <div>
+                <div style="font-size: 0.7rem; color: #aab3ff; text-transform: uppercase; letter-spacing: 0.12em">
+                  Reroute
+                </div>
+                <div id="aiReroute" style="font-weight: 700">--</div>
+              </div>
+              <div>
+                <div style="font-size: 0.7rem; color: #aab3ff; text-transform: uppercase; letter-spacing: 0.12em">
+                  Confidence
+                </div>
+                <div id="aiConfidence" style="font-weight: 700">--</div>
+              </div>
+            </div>
+            <div style="margin-top: 0.75rem">
+              <div style="font-size: 0.7rem; color: #aab3ff; text-transform: uppercase; letter-spacing: 0.12em">
+                Gemini Explanation (Google AI)
+              </div>
+              <div id="aiGemini" style="margin-top: 0.35rem; color: #eff0f5">Waiting for telemetry...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="glass-card" style="margin-top: 1rem">
+        <h3><i class="fas fa-map"></i> Real-time Tracking</h3>
+        <div id="map"></div>
+        <p style="font-size: 0.7rem; color: #8a96e0; margin-top: 0.5rem">
+          <i class="fas fa-info-circle"></i> Blue marker shows current position | Colored trail
+          shows movement path
+        </p>
+      </div>
+
+      <div class="glass-card" style="margin-top: 1rem">
+        <h3><i class="fas fa-chart-line"></i> Telemetry Trends (Last 30 readings)</h3>
+        <div class="chart-container">
+          <canvas id="telemetryChart"></canvas>
+        </div>
+      </div>
+
+      <div class="glass-card" style="margin-top: 1rem">
+        <h3><i class="fas fa-bell"></i> Smart Alerts</h3>
+        <div id="alertsPanel" style="max-height: 120px; overflow-y: auto">
+          <p style="color: #8a96e0; text-align: center">
+            No alerts yet. Start simulation to monitor.
+          </p>
+        </div>
+      </div>
+
+      <div class="glass-card" style="margin-top: 1rem">
+        <h3><i class="fas fa-database"></i> Live Data Stream</h3>
+        <div class="data-table">
+          <table id="dataTable">
+            <thead>
+              <tr>
+                <th>Time</th>
+                <th>Battery</th>
+                <th>Temp</th>
+                <th>Humidity</th>
+                <th>Motion</th>
+                <th>Location</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody">
+              <tr>
+                <td colspan="6" style="text-align: center">No data yet. Start simulation.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      function getQueryParam(name) {
+        const params = new URLSearchParams(window.location.search);
+        return params.get(name) || "";
+      }
+
+      const apiBase = (getQueryParam("api_base") || "http://127.0.0.1:5000").replace(/\/$/, "");
+      const defaultShipmentId = "SHP-SIM-" + Date.now();
+
+      let simulationInterval = null;
+      let isSimulating = false;
+      let deviceId = "sim_device_" + Date.now();
+      let historicalData = [];
+      let pathPoints = [];
+      let lastDataPoint = null;
+      let chart = null;
+      let map = null;
+      let marker = null;
+      let polyline = null;
+      let currentLocation = { lat: 28.6139, lng: 77.2090 };
+      let dataPointCount = 0;
+      let demoMode = false;
+      let demoType = null;
+
+      let inputs = {
+        battery: null,
+        temp: null,
+        humidity: null,
+        motion: null,
+        location: null
+      };
+
+      let userData = {
+        name: "Guest User",
+        shipmentId: getQueryParam("shipment_id") || defaultShipmentId,
+        origin: getQueryParam("origin") || "Unknown",
+        destination: getQueryParam("destination") || "Unknown",
+        carrier: getQueryParam("carrier") || "ChainGuard Fleet",
+        cargoType: getQueryParam("cargo_type") || "Road"
+      };
+
+      function setupBackendStatus() {
+        const statusLed = document.getElementById("statusLed");
+        const backendText = document.getElementById("backendText");
+        const cloudStatus = document.getElementById("cloudStatus");
+
+        fetch(apiBase + "/api/health")
+          .then((res) => res.json())
+          .then(() => {
+            statusLed.className = "status-indicator status-online";
+            backendText.innerHTML = "Connected";
+            cloudStatus.innerHTML = "œ… Backend reachable";
+          })
+          .catch(() => {
+            statusLed.className = "status-indicator status-offline";
+            backendText.innerHTML = "Offline";
+            cloudStatus.innerHTML = "Œ Backend not reachable";
+          });
+      }
+
+      function loadUserData() {
+        const stored = window.localStorage.getItem("chainguard_user");
+        if (stored) {
+          try {
+            const parsed = JSON.parse(stored);
+            userData.name = parsed.companyName || parsed.email || userData.name;
+          } catch (e) {}
+        }
+
+        document.getElementById("userNameDisplay").innerHTML = userData.name;
+        document.getElementById("shipmentDisplay").innerHTML = userData.shipmentId;
+      }
+
+      function initMap() {
+        map = L.map("map").setView([currentLocation.lat, currentLocation.lng], 13);
+        L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
+          attribution: "&copy; <a href=\"https://www.openstreetmap.org/copyright\">OSM</a>",
+          subdomains: "abcd"
+        }).addTo(map);
+
+        marker = L.marker([currentLocation.lat, currentLocation.lng], {
+          icon: L.divIcon({
+            html:
+              '<div style="background:#5F7AF2; width:14px; height:14px; border-radius:50%; border:2px solid white; box-shadow:0 0 10px #5F7AF2;"></div>',
+            iconSize: [14, 14],
+            className: "custom-marker"
+          })
+        }).addTo(map);
+
+        polyline = L.polyline([], { color: "#5F7AF2", weight: 3, opacity: 0.7 }).addTo(map);
+      }
+
+      function generateData() {
+        let battery, temperature, humidity, motion, newLocation;
+
+        if (inputs.battery !== null && !demoMode) {
+          battery = Math.max(0, Math.min(100, inputs.battery));
+        } else if (lastDataPoint && isSimulating) {
+          battery = Math.max(0, lastDataPoint.battery_pct - (Math.random() * 1.2 + 0.2));
+        } else {
+          battery = Math.floor(Math.random() * 41) + 60;
+        }
+        battery = Math.round(battery * 10) / 10;
+
+        if (inputs.temp !== null && !demoMode) {
+          temperature = inputs.temp;
+        } else if (lastDataPoint) {
+          temperature = lastDataPoint.temperature_c + (Math.random() - 0.5) * 1.2;
+          if (demoType === "coldchain" && isSimulating) {
+            temperature += Math.random() * 3 + 1;
+          }
+        } else {
+          temperature = Math.random() * 35 - 5;
+        }
+        temperature = Math.max(-10, Math.min(50, temperature));
+        temperature = Math.round(temperature * 10) / 10;
+
+        if (inputs.humidity !== null && !demoMode) {
+          humidity = Math.min(100, Math.max(0, inputs.humidity));
+        } else if (lastDataPoint) {
+          humidity = Math.min(100, Math.max(0, lastDataPoint.humidity_pct + (Math.random() - 0.5) * 3));
+        } else {
+          humidity = Math.floor(Math.random() * 60) + 20;
+        }
+        humidity = Math.round(humidity * 10) / 10;
+
+        if (inputs.motion !== null && !demoMode) {
+          motion = inputs.motion === "true";
+        } else {
+          motion = Math.random() > 0.3;
+        }
+        if (demoType === "delayed" && isSimulating) {
+          motion = false;
+        }
+
+        if (inputs.location && !demoMode) {
+          const coords = inputs.location.split(",");
+          if (coords.length === 2) {
+            newLocation = { lat: parseFloat(coords[0]), lng: parseFloat(coords[1]) };
+          } else {
+            newLocation = currentLocation;
+          }
+        } else if (lastDataPoint && motion) {
+          newLocation = {
+            lat: lastDataPoint.lat + (Math.random() - 0.5) * 0.008,
+            lng: lastDataPoint.lng + (Math.random() - 0.5) * 0.008
+          };
+        } else if (lastDataPoint) {
+          newLocation = { lat: lastDataPoint.lat, lng: lastDataPoint.lng };
+        } else {
+          newLocation = currentLocation;
+        }
+
+        currentLocation = newLocation;
+
+        const speed = motion ? Math.round((Math.random() * 55 + 15) * 10) / 10 : 0;
+        const signal = Math.round((Math.random() * 40 + 55) * 10) / 10;
+
+        let externalEvent = null;
+        if (temperature > 32 || battery < 22) {
+          externalEvent = {
+            name: temperature > 32 ? "Heat stress risk" : "Low tracker battery risk",
+            severity: temperature > 32 ? 0.26 : 0.18,
+            source: "simulator"
+          };
+        }
+
+        return {
+          shipment_id: userData.shipmentId,
+          origin: userData.origin,
+          destination: userData.destination,
+          carrier: userData.carrier,
+          cargo_type: userData.cargoType,
+          device_id: deviceId,
+          timestamp: new Date().toISOString(),
+          timestamp_display: new Date().toLocaleTimeString(),
+          battery_pct: battery,
+          temperature_c: temperature,
+          humidity_pct: humidity,
+          motion: motion,
+          speed_kmh: speed,
+          signal_strength: signal,
+          lat: newLocation.lat,
+          lng: newLocation.lng,
+          external_event: externalEvent
+        };
+      }
+
+      function updateAIPanel(payload) {
+        if (!payload) return;
+
+        const riskScoreRaw = payload.risk_score;
+        const riskScorePct =
+          typeof riskScoreRaw === "number"
+            ? Math.round(riskScoreRaw <= 1 ? riskScoreRaw * 100 : riskScoreRaw)
+            : null;
+
+        const riskCategory = payload.risk_category || "--";
+        const delayMinutes = payload.delay_minutes != null ? String(payload.delay_minutes) : "--";
+        const action = payload.action || "--";
+
+        document.getElementById("aiRiskScore").textContent = riskScorePct == null ? "--" : riskScorePct + "%";
+        document.getElementById("aiRiskCategory").textContent = riskCategory;
+        document.getElementById("aiDelay").textContent = delayMinutes;
+        document.getElementById("aiAction").textContent = action;
+        document.getElementById("aiEtaText").textContent = payload.eta_text || "--";
+
+        const rerouteFlag =
+          payload.rerouting?.reroute_recommended != null
+            ? payload.rerouting.reroute_recommended
+            : payload.rerouting?.alternate != null ||
+              payload.rerouting?.alternate_route != null;
+        document.getElementById("aiReroute").textContent = rerouteFlag ? "Recommended" : "No";
+
+        const confidence =
+          payload.confidence != null
+            ? payload.confidence + "%"
+            : payload.ml_predicted
+              ? "ML"
+              : "Rules";
+        document.getElementById("aiConfidence").textContent = confidence;
+
+        const geminiText =
+          payload.gemini_explanation ||
+          "Gemini disabled or key missing. (Set GEMINI_API_KEY in backend .env for live explanations.)";
+        document.getElementById("aiGemini").textContent = geminiText;
+      }
+
+      async function sendToBackend(data) {
+        try {
+          const payload = {
+            shipment_id: data.shipment_id,
+            origin: data.origin,
+            destination: data.destination,
+            carrier: data.carrier,
+            cargo_type: data.cargo_type,
+            lat: data.lat,
+            lng: data.lng,
+            speed_kmh: data.speed_kmh,
+            temperature_c: data.temperature_c,
+            battery_pct: data.battery_pct,
+            humidity_pct: data.humidity_pct,
+            signal_strength: data.signal_strength,
+            timestamp: data.timestamp,
+            device_id: data.device_id,
+            external_event: data.external_event
+          };
+
+          const response = await fetch(apiBase + "/api/ingest", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+          });
+
+            if (!response.ok) throw new Error("Ingest failed");
+
+            const processed = await response.json();
+            updateAIPanel(processed);
+  
+            dataPointCount++;
+            document.getElementById("syncCount").innerHTML = dataPointCount;
+            document.getElementById("dataPointCount").innerHTML = dataPointCount;
+            document.getElementById("cloudStatus").innerHTML = "Synced";
+          setTimeout(() => {
+            const el = document.getElementById("cloudStatus");
+            if (el) el.innerHTML = "Connected";
+          }, 1500);
+          return true;
+        } catch (error) {
+          document.getElementById("cloudStatus").innerHTML = "Failed";
+          return false;
+        }
+      }
+
+      function checkAlerts(data) {
+        const alerts = [];
+
+        if (data.temperature_c > 30) {
+          alerts.push("HIGH TEMPERATURE: " + data.temperature_c + "°C - Immediate attention required!");
+        }
+        if (data.temperature_c < 0) {
+          alerts.push("LOW TEMPERATURE: " + data.temperature_c + "°C - Freezing risk!");
+        }
+        if (data.battery_pct < 20) {
+          alerts.push("LOW BATTERY: " + data.battery_pct + "% - Device needs charging!");
+        }
+        if (data.battery_pct < 10) {
+          alerts.push("CRITICAL BATTERY: " + data.battery_pct + "% - Device may shut down!");
+        }
+        if (data.humidity_pct > 85) {
+          alerts.push("HIGH HUMIDITY: " + data.humidity_pct + "% - Risk for sensitive cargo!");
+        }
+        if (demoType === "delayed" && data.motion === false && isSimulating) {
+          alerts.push("° DELAY ALERT: Shipment stationary for extended period!");
+        }
+
+        if (alerts.length > 0) {
+          const panel = document.getElementById("alertsPanel");
+          if (panel.innerHTML.includes("No alerts yet")) {
+            panel.innerHTML = "";
+          }
+          const alertDiv = document.createElement("div");
+          alertDiv.className = "alert-badge";
+          alertDiv.innerHTML =
+            '<i class="fas fa-exclamation-triangle"></i> ' +
+            alerts.join(" | ") +
+            ' <span style="float:right; font-size:0.7rem;">' +
+            data.timestamp_display +
+            "</span>";
+          panel.prepend(alertDiv);
+          if (panel.children.length > 10) {
+            panel.removeChild(panel.lastChild);
+          }
+        }
+      }
+
+      function updateUI(data) {
+        document.getElementById("liveBattery").innerHTML = data.battery_pct + "%";
+        document.getElementById("liveTemp").innerHTML = data.temperature_c + "°C";
+        document.getElementById("liveHumidity").innerHTML = data.humidity_pct + "%";
+        document.getElementById("liveMotion").innerHTML = data.motion ? "Moving" : "Stopped";
+
+        if (marker) {
+          marker.setLatLng([data.lat, data.lng]);
+          map.setView([data.lat, data.lng], 13);
+        }
+
+        pathPoints.push([data.lat, data.lng]);
+        if (pathPoints.length > 100) pathPoints.shift();
+        if (polyline) {
+          polyline.setLatLngs(pathPoints);
+        }
+
+        const tbody = document.getElementById("tableBody");
+        if (tbody.children[0] && tbody.children[0].innerHTML.includes("No data")) {
+          tbody.innerHTML = "";
+        }
+        const row = tbody.insertRow(0);
+        row.insertCell(0).innerHTML = data.timestamp_display;
+        row.insertCell(1).innerHTML = data.battery_pct + "%";
+        row.insertCell(2).innerHTML = data.temperature_c + "°C";
+        row.insertCell(3).innerHTML = data.humidity_pct + "%";
+        row.insertCell(4).innerHTML = data.motion ? "Moving" : "Stopped";
+        row.insertCell(5).innerHTML = data.lat.toFixed(4) + ", " + data.lng.toFixed(4);
+        if (tbody.children.length > 20) {
+          tbody.removeChild(tbody.lastChild);
+        }
+
+        historicalData.unshift(data);
+        if (historicalData.length > 30) historicalData.pop();
+        updateChart();
+      }
+
+      function updateChart() {
+        const labels = historicalData.slice().reverse().map((d) => d.timestamp_display);
+        const temps = historicalData.slice().reverse().map((d) => d.temperature_c);
+        const bats = historicalData.slice().reverse().map((d) => d.battery_pct);
+        const hums = historicalData.slice().reverse().map((d) => d.humidity_pct);
+
+        if (chart) {
+          chart.data.labels = labels;
+          chart.data.datasets[0].data = temps;
+          chart.data.datasets[1].data = bats;
+          chart.data.datasets[2].data = hums;
+          chart.update();
+          return;
+        }
+
+        const ctx = document.getElementById("telemetryChart").getContext("2d");
+        chart = new Chart(ctx, {
+          type: "line",
+          data: {
+            labels: labels,
+            datasets: [
+              {
+                label: "Temperature (°C)",
+                data: temps,
+                borderColor: "#ff6464",
+                backgroundColor: "rgba(255,100,100,0.1)",
+                fill: true,
+                tension: 0.3
+              },
+              {
+                label: "Battery (%)",
+                data: bats,
+                borderColor: "#5F7AF2",
+                backgroundColor: "rgba(95,122,242,0.1)",
+                fill: true,
+                tension: 0.3
+              },
+              {
+                label: "Humidity (%)",
+                data: hums,
+                borderColor: "#64ffda",
+                backgroundColor: "rgba(100,255,218,0.1)",
+                fill: true,
+                tension: 0.3
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+              legend: { labels: { color: "#EFF0F5" } }
+            },
+            scales: {
+              y: { grid: { color: "rgba(255,255,255,0.1)" }, ticks: { color: "#EFF0F5" } },
+              x: { ticks: { color: "#EFF0F5", maxRotation: 45 } }
+            }
+          }
+        });
+      }
+
+      async function simulationLoop() {
+        if (!isSimulating) return;
+        const newData = generateData();
+        lastDataPoint = newData;
+        updateUI(newData);
+        checkAlerts(newData);
+        await sendToBackend(newData);
+      }
+
+      function startSimulation() {
+        if (isSimulating) return;
+
+        inputs.battery = document.getElementById("inputBattery").value ? parseFloat(document.getElementById("inputBattery").value) : null;
+        inputs.temp = document.getElementById("inputTemp").value ? parseFloat(document.getElementById("inputTemp").value) : null;
+        inputs.humidity = document.getElementById("inputHumidity").value ? parseFloat(document.getElementById("inputHumidity").value) : null;
+        inputs.motion = document.getElementById("inputMotion").value || null;
+        inputs.location = document.getElementById("inputLocation").value || null;
+
+        isSimulating = true;
+        simulationInterval = setInterval(() => simulationLoop(), 3000);
+
+        document.getElementById("startBtn").disabled = true;
+        document.getElementById("stopBtn").disabled = false;
+        simulationLoop();
+      }
+
+      function stopSimulation() {
+        if (simulationInterval) {
+          clearInterval(simulationInterval);
+          simulationInterval = null;
+        }
+        isSimulating = false;
+        demoMode = false;
+        demoType = null;
+        document.getElementById("startBtn").disabled = false;
+        document.getElementById("stopBtn").disabled = true;
+      }
+
+      function addAlertMessage(message) {
+        const panel = document.getElementById("alertsPanel");
+        if (panel.innerHTML.includes("No alerts yet")) {
+          panel.innerHTML = "";
+        }
+        const alertDiv = document.createElement("div");
+        alertDiv.className = "alert-badge";
+        alertDiv.innerHTML = '<i class="fas fa-info-circle"></i> INFO: ' + message;
+        panel.prepend(alertDiv);
+      }
+
+      function runDemo(type) {
+        stopSimulation();
+        demoMode = true;
+        demoType = type;
+
+        if (type === "normal") {
+          document.getElementById("inputBattery").value = "95";
+          document.getElementById("inputTemp").value = "22";
+          document.getElementById("inputHumidity").value = "45";
+          document.getElementById("inputMotion").value = "true";
+          document.getElementById("inputLocation").value = "28.6139,77.2090";
+          addAlertMessage("Demo: Normal Delivery - Starting simulation with optimal conditions");
+        } else if (type === "delayed") {
+          document.getElementById("inputBattery").value = "28";
+          document.getElementById("inputTemp").value = "18";
+          document.getElementById("inputHumidity").value = "55";
+          document.getElementById("inputMotion").value = "false";
+          document.getElementById("inputLocation").value = "28.5500,77.2500";
+          addAlertMessage("Demo: Delayed Shipment - Low battery, stationary vehicle scenario");
+        } else if (type === "coldchain") {
+          document.getElementById("inputBattery").value = "88";
+          document.getElementById("inputTemp").value = "4";
+          document.getElementById("inputHumidity").value = "65";
+          document.getElementById("inputMotion").value = "true";
+          document.getElementById("inputLocation").value = "28.6200,77.2200";
+          addAlertMessage("Demo: Cold Chain Failure - Temperature will spike over time!");
+        }
+
+        setTimeout(() => startSimulation(), 500);
+      }
+
+      function exportCSV() {
+        if (historicalData.length === 0) {
+          alert("No data to export. Start simulation first.");
+          return;
+        }
+
+        const headers = ["Timestamp", "Device ID", "Shipment ID", "User", "Battery (%)", "Temperature (°C)", "Humidity (%)", "Motion", "Speed (km/h)", "Signal", "Latitude", "Longitude"];
+        const rows = historicalData.map((d) => [
+          d.timestamp,
+          d.device_id,
+          d.shipment_id,
+          userData.name,
+          d.battery_pct,
+          d.temperature_c,
+          d.humidity_pct,
+          d.motion ? "Moving" : "Stationary",
+          d.speed_kmh,
+          d.signal_strength,
+          d.lat,
+          d.lng
+        ]);
+
+        const csvContent = [headers, ...rows].map((row) => row.join(",")).join("\n");
+        const blob = new Blob([csvContent], { type: "text/csv" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "iot_data_" + deviceId + "_" + Date.now() + ".csv";
+        a.click();
+        URL.revokeObjectURL(url);
+        addAlertMessage("Data exported: " + historicalData.length + " records");
+      }
+
+      function init() {
+        loadUserData();
+        setupBackendStatus();
+        initMap();
+
+        document.getElementById("startBtn").addEventListener("click", startSimulation);
+        document.getElementById("stopBtn").addEventListener("click", stopSimulation);
+      }
+
+      init();
+    </script>
+  </body>
+</html>
+
+
+
