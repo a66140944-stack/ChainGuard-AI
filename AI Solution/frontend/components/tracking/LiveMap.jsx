@@ -2,14 +2,10 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Expand, MapPin, Route, X } from "lucide-react";
-import {
-  MapContainer,
-  Marker,
-  Popup,
-  TileLayer,
-  useMap
-} from "react-leaflet";
-import L from "leaflet";
+
+const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "AIzaSyDCNUNZ05VjUSil1kCpnPO9sUH3goiWhP4";
+
+let googleMapsScriptPromise;
 
 function resolveLocationCoordinates(location, fallback) {
   const lat = Number(location?.lat ?? location?.latitude ?? fallback?.lat ?? 22.7196);
@@ -41,142 +37,203 @@ function buildRoutePoints(shipment) {
     .filter(Boolean);
 }
 
-function FixLeafletMarkerIcons() {
-  useEffect(() => {
-    L.Icon.Default.mergeOptions({
-      iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
-      iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-      shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png"
+function loadGoogleMaps() {
+  if (typeof window === "undefined") {
+    return Promise.reject(new Error("Google Maps can only load in the browser."));
+  }
+
+  if (window.google?.maps) {
+    return Promise.resolve(window.google.maps);
+  }
+
+  if (!googleMapsScriptPromise) {
+    googleMapsScriptPromise = new Promise((resolve, reject) => {
+      const script = document.createElement("script");
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=routes`;
+      script.async = true;
+      script.defer = true;
+      script.onload = () => resolve(window.google.maps);
+      script.onerror = () => reject(new Error("Failed to load Google Maps JavaScript API."));
+      document.head.appendChild(script);
     });
-  }, []);
+  }
+
+  return googleMapsScriptPromise;
+}
+
+function normalizeMapPoint(point) {
+  if (Array.isArray(point) && point.length >= 2) {
+    const lat = Number(point[0]);
+    const lng = Number(point[1]);
+
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+      return null;
+    }
+
+    return { lat, lng };
+  }
+
+  if (point && typeof point === "object") {
+    const lat = Number(point.lat ?? point.latitude);
+    const lng = Number(point.lng ?? point.longitude);
+
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+      return null;
+    }
+
+    return { lat, lng };
+  }
 
   return null;
 }
 
-function RecenterMap({ center }) {
-  const map = useMap();
-
-  useEffect(() => {
-    if (!center) return;
-    map.setView([center.lat, center.lng], Math.max(map.getZoom(), 7), {
-      animate: true
-    });
-  }, [center, map]);
-
-  return null;
-}
-
-function OsrmRouteLayer({ path }) {
-  const map = useMap();
-  const routeLayerRef = useRef(null);
+function ShipmentMap({ center, path, height }) {
+  const mapElementRef = useRef(null);
+  const mapRef = useRef(null);
+  const markersRef = useRef([]);
+  const directionsRendererRef = useRef(null);
+  const fallbackPolylineRef = useRef(null);
 
   useEffect(() => {
     let isCancelled = false;
 
-    async function drawRoute() {
-      if (routeLayerRef.current) {
-        map.removeLayer(routeLayerRef.current);
-        routeLayerRef.current = null;
-      }
-
-      if (!Array.isArray(path) || path.length < 2) {
-        return;
-      }
-
-      const coordinates = path.map(({ lat, lng }) => `${lng},${lat}`).join(";");
-      const routeUrl =
-        `https://router.project-osrm.org/route/v1/driving/${coordinates}` +
-        "?overview=full&geometries=geojson";
+    async function renderRoute() {
+      const routePoints = path.map(normalizeMapPoint).filter(Boolean);
 
       try {
-        const response = await fetch(routeUrl);
+        const maps = await loadGoogleMaps();
 
-        if (!response.ok) {
-          throw new Error(`OSRM request failed with status ${response.status}`);
+        if (isCancelled || !mapElementRef.current) {
+          return;
         }
 
-        const data = await response.json();
-        const geometry = data?.routes?.[0]?.geometry;
-
-        if (!geometry) {
-          throw new Error("OSRM route geometry is missing");
+        if (!mapRef.current) {
+          mapRef.current = new maps.Map(mapElementRef.current, {
+            center: { lat: 28.756563, lng: 77.495548 },
+            zoom: 13
+          });
         }
+
+        if (!directionsRendererRef.current) {
+          directionsRendererRef.current = new maps.DirectionsRenderer({
+            suppressMarkers: true
+          });
+          directionsRendererRef.current.setMap(mapRef.current);
+        } else {
+          directionsRendererRef.current.setDirections({ routes: [] });
+        }
+
+        markersRef.current.forEach((marker) => marker.setMap(null));
+        markersRef.current = [];
+
+        if (fallbackPolylineRef.current) {
+          fallbackPolylineRef.current.setMap(null);
+          fallbackPolylineRef.current = null;
+        }
+
+        if (!routePoints.length) {
+          mapRef.current.setCenter(center);
+          mapRef.current.setZoom(13);
+          return;
+        }
+
+        markersRef.current = routePoints.map(
+          (point, index) =>
+            new maps.Marker({
+              map: mapRef.current,
+              position: point,
+              title:
+                index === 0
+                  ? "Origin"
+                  : index === routePoints.length - 1
+                    ? "Destination"
+                    : `Waypoint ${index}`
+            })
+        );
+
+        if (routePoints.length === 1) {
+          mapRef.current.setCenter(routePoints[0]);
+          mapRef.current.setZoom(13);
+          return;
+        }
+
+        const directionsService = new maps.DirectionsService();
+        const directionsResult = await directionsService.route({
+          origin: routePoints[0],
+          destination: routePoints[routePoints.length - 1],
+          waypoints: routePoints.slice(1, -1).map((point) => ({
+            location: point,
+            stopover: true
+          })),
+          travelMode: maps.TravelMode.DRIVING
+        });
 
         if (isCancelled) {
           return;
         }
 
-        routeLayerRef.current = L.geoJSON(geometry, {
-          style: {
-            color: "#2563eb",
-            weight: 4,
-            opacity: 0.8
-          }
-        }).addTo(map);
+        directionsRendererRef.current.setDirections(directionsResult);
 
-        const routeBounds = routeLayerRef.current.getBounds();
-        if (routeBounds.isValid()) {
-          map.fitBounds(routeBounds, { padding: [24, 24] });
+        const routeBounds = new maps.LatLngBounds();
+        directionsResult.routes[0]?.overview_path?.forEach((latLng) => {
+          routeBounds.extend(latLng);
+        });
+
+        if (!routeBounds.isEmpty()) {
+          mapRef.current.fitBounds(routeBounds);
         }
       } catch (error) {
         if (isCancelled) {
           return;
         }
 
-        console.error("Failed to load OSRM route, using fallback polyline.", error);
+        console.error("Failed to render Google Maps directions.", error);
 
-        routeLayerRef.current = L.polyline(
-          path.map(({ lat, lng }) => [lat, lng]),
-          {
-            color: "#2563eb",
-            weight: 4,
-            opacity: 0.8,
-            dashArray: "8 10"
+        if (window.google?.maps && routePoints.length > 1) {
+          fallbackPolylineRef.current = new window.google.maps.Polyline({
+            path: routePoints,
+            strokeColor: "#2563eb",
+            strokeOpacity: 0.8,
+            strokeWeight: 4
+          });
+          fallbackPolylineRef.current.setMap(mapRef.current);
+
+          const fallbackBounds = new window.google.maps.LatLngBounds();
+          routePoints.forEach((point) => fallbackBounds.extend(point));
+          if (!fallbackBounds.isEmpty()) {
+            mapRef.current.fitBounds(fallbackBounds);
           }
-        ).addTo(map);
-
-        const fallbackBounds = routeLayerRef.current.getBounds();
-        if (fallbackBounds.isValid()) {
-          map.fitBounds(fallbackBounds, { padding: [24, 24] });
         }
       }
     }
 
-    drawRoute();
+    renderRoute();
 
     return () => {
       isCancelled = true;
+    };
+  }, [center, path]);
 
-      if (routeLayerRef.current) {
-        map.removeLayer(routeLayerRef.current);
-        routeLayerRef.current = null;
+  useEffect(() => {
+    return () => {
+      markersRef.current.forEach((marker) => marker.setMap(null));
+      markersRef.current = [];
+
+      if (fallbackPolylineRef.current) {
+        fallbackPolylineRef.current.setMap(null);
+        fallbackPolylineRef.current = null;
+      }
+
+      if (directionsRendererRef.current) {
+        directionsRendererRef.current.setMap(null);
+        directionsRendererRef.current = null;
       }
     };
-  }, [map, path]);
+  }, []);
 
-  return null;
-}
-
-function ShipmentMap({ center, path, height }) {
   return (
     <div className="relative z-0 h-full w-full overflow-hidden rounded-xl" style={{ height }}>
-      <MapContainer
-        center={[center.lat, center.lng]}
-        zoom={7}
-        className="z-0 h-full w-full"
-        style={{ height: "100%", width: "100%" }}
-      >
-        <FixLeafletMarkerIcons />
-        <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
-        <RecenterMap center={center} />
-        <OsrmRouteLayer path={path} />
-        <Marker position={[center.lat, center.lng]}>
-          <Popup>Current shipment position</Popup>
-        </Marker>
-      </MapContainer>
+      <div ref={mapElementRef} className="z-0 h-full w-full" />
     </div>
   );
 }

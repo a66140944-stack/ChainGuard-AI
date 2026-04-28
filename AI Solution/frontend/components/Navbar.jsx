@@ -2,18 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-
-function LogoMark() {
-  return (
-    <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-brand-600 text-white shadow-lg shadow-brand-600/20">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-        <path d="M12 2 2 7l10 5 10-5-10-5Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
-        <path d="M2 17l10 5 10-5" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
-        <path d="M2 12l10 5 10-5" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
-      </svg>
-    </span>
-  );
-}
+import BrandWordmark from "./BrandWordmark.jsx";
 
 export default function Navbar() {
   const [darkModeEnabled, setDarkModeEnabled] = useState(false);
@@ -39,9 +28,8 @@ export default function Navbar() {
     <header className="sticky top-0 z-50 border-b border-white/10 bg-background/70 backdrop-blur-xl">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4">
         <Link href="/" className="flex items-center gap-3">
-          <LogoMark />
+          <BrandWordmark className="h-11 w-auto rounded-xl" priority sizes="(max-width: 768px) 180px, 220px" />
           <div className="flex flex-col">
-            <span className="text-base font-semibold tracking-tight">ChainGuard</span>
             <span className="text-xs text-muted">Supply chain visibility platform</span>
           </div>
         </Link>
