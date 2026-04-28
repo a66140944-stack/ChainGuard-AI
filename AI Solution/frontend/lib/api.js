@@ -9,10 +9,6 @@ function joinUrl(path) {
   return `${base}${suffix}`;
 }
 
-function getFallbackShipment(id) {
-  return dummyShipments.find((shipment) => shipment.id === id) || null;
-}
-
 function normalizeShipment(apiShipment) {
   if (!apiShipment) return null;
 
@@ -96,10 +92,6 @@ async function request(path, options = {}) {
   return response.json();
 }
 
-export async function fetchHealth() {
-  return request("/api/health");
-}
-
 export async function fetchShipments() {
   try {
     const shipments = await request("/api/shipments");
@@ -107,38 +99,6 @@ export async function fetchShipments() {
   } catch (error) {
     console.error("fetchShipments failed, falling back to dummy data:", error);
     return dummyShipments;
-  }
-}
-
-export async function fetchShipment(id) {
-  try {
-    const shipment = await request(`/api/shipments/${id}`);
-    return normalizeShipment(shipment);
-  } catch (error) {
-    console.error("fetchShipment failed, falling back to dummy data:", error);
-    return getFallbackShipment(id);
-  }
-}
-
-export async function fetchShipmentHistory(id) {
-  try {
-    return await request(`/api/shipments/${id}/history`);
-  } catch (error) {
-    console.error("fetchShipmentHistory failed, falling back to dummy data:", error);
-    const fallbackShipment = getFallbackShipment(id);
-    return (
-      fallbackShipment?.temperatureSeries?.map((item) => ({
-        timestamp: item.timestamp,
-        risk_score:
-          fallbackShipment.riskLevel === "High"
-            ? 0.8
-            : fallbackShipment.riskLevel === "Medium"
-              ? 0.45
-              : 0.2,
-        action: fallbackShipment.status,
-        delay_minutes: fallbackShipment.delayDays * 24 * 60
-      })) || []
-    );
   }
 }
 
