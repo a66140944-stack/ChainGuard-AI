@@ -1,6 +1,7 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import useSocket from "../hooks/useSocket.js";
 import { createShipment, fetchShipments } from "../lib/api.js";
 import { dummyShipments } from "../data/dummyData.js";
 
@@ -56,10 +57,144 @@ function getCityCoordinates(cityName) {
   return cityCoordinates[String(cityName || "").trim()] || { lat: 22.7196, lng: 75.8577 };
 }
 
+function computeRiskLevelFromScore(rawRiskScore) {
+  const normalizedRiskScore = rawRiskScore <= 1 ? rawRiskScore * 100 : rawRiskScore;
+
+  if (normalizedRiskScore <= 40) return "Low";
+  if (normalizedRiskScore <= 70) return "Medium";
+  return "High";
+}
+
+function normalizeLocation(updateLocation, currentLocation) {
+  if (!updateLocation) {
+    return currentLocation || null;
+  }
+
+  if (typeof updateLocation === "string") {
+    return {
+      ...(currentLocation || {}),
+      label: updateLocation
+    };
+  }
+
+  const lat = Number(
+    updateLocation.lat ??
+      updateLocation.latitude ??
+      updateLocation.location?.lat ??
+      currentLocation?.lat ??
+      22.7196
+  );
+  const lng = Number(
+    updateLocation.lng ??
+      updateLocation.longitude ??
+      updateLocation.location?.lng ??
+      currentLocation?.lng ??
+      75.8577
+  );
+
+  return {
+    ...(currentLocation || {}),
+    label: updateLocation.label || updateLocation.name || currentLocation?.label || "Live position",
+    lat,
+    lng
+  };
+}
+
+function appendChartPoint(points, nextPoint, valueKey) {
+  const safePoints = Array.isArray(points) ? points : [];
+  if (nextPoint == null || nextPoint[valueKey] == null) {
+    return safePoints;
+  }
+
+  const nextLabel = String(nextPoint.timestamp || nextPoint.label || "");
+  const existingLastPoint = safePoints[safePoints.length - 1];
+
+  if (existingLastPoint && String(existingLastPoint.timestamp || existingLastPoint.label || "") === nextLabel) {
+    return [...safePoints.slice(0, -1), nextPoint];
+  }
+
+  return [...safePoints.slice(-19), nextPoint];
+}
+
 export function ShipmentContextProvider({ children }) {
   const [shipments, setShipments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedShipmentId, setSelectedShipmentId] = useState(null);
+
+  const handleShipmentUpdate = useCallback((updatePayload) => {
+    setShipments((previousShipments) =>
+      previousShipments.map((shipment) => {
+        if (
+          shipment.id !== updatePayload.id &&
+          shipment.shipmentNumber !== updatePayload.id &&
+          shipment.backendData?.shipment_id !== updatePayload.id
+        ) {
+          return shipment;
+        }
+
+        const currentLocation = normalizeLocation(updatePayload.location, shipment.currentLocation);
+        const nextTemperature =
+          updatePayload.temperature != null ? Number(updatePayload.temperature) : shipment.temperatureC;
+        const nextRiskScore =
+          updatePayload.riskScore != null ? Number(updatePayload.riskScore) : shipment.backendData?.risk_score ?? 0;
+        const normalizedRiskScore = nextRiskScore <= 1 ? nextRiskScore * 100 : nextRiskScore;
+        const nextTimestamp =
+          updatePayload.timestamp ||
+          new Date().toISOString();
+
+        return {
+          ...shipment,
+          currentLocation: currentLocation || shipment.currentLocation,
+          temperatureC: nextTemperature,
+          riskScore: normalizedRiskScore,
+          riskLevel: computeRiskLevelFromScore(nextRiskScore),
+          temperatureSeries: appendChartPoint(
+            shipment.temperatureSeries,
+            {
+              timestamp: nextTimestamp,
+              temperatureC: nextTemperature
+            },
+            "temperatureC"
+          ),
+          riskHistory: appendChartPoint(
+            shipment.riskHistory,
+            {
+              timestamp: nextTimestamp,
+              riskScore: normalizedRiskScore
+            },
+            "riskScore"
+          ),
+          route:
+            currentLocation?.lat != null && currentLocation?.lng != null
+              ? [
+                  ...(shipment.route || []),
+                  {
+                    name: currentLocation.label || "Live position",
+                    lat: currentLocation.lat,
+                    lng: currentLocation.lng
+                  }
+                ].filter(
+                  (point, index, array) =>
+                    index === 0 ||
+                    point.lat !== array[index - 1].lat ||
+                    point.lng !== array[index - 1].lng
+                )
+              : shipment.route,
+          backendData: {
+            ...(shipment.backendData || {}),
+            risk_score: nextRiskScore <= 1 ? nextRiskScore : Number((nextRiskScore / 100).toFixed(3)),
+            temperature_c: nextTemperature,
+            timestamp: nextTimestamp,
+            location: updatePayload.location
+          }
+        };
+      })
+    );
+  }, []);
+
+  const { latestShipmentData, alerts } = useSocket({
+    onShipmentUpdate: handleShipmentUpdate
+  });
 
   useEffect(() => {
     let active = true;
@@ -116,7 +251,11 @@ export function ShipmentContextProvider({ children }) {
       temperatureSeries: buildTemperatureSeries({
         startDate: formValues.startDate,
         temperatureC: formValues.temperatureC
-      }),
+      }).map((entry) => ({
+        ...entry,
+        timestamp: entry.timestamp
+      })),
+      riskHistory: [],
       fragility: formValues.fragility,
       vehicleNumber: formValues.vehicleNumber,
       delayDays,
@@ -166,6 +305,8 @@ export function ShipmentContextProvider({ children }) {
         selectedShipmentId,
         setSelectedShipmentId,
         selectedShipment,
+        latestShipmentData,
+        alerts,
         addShipment,
         riskPillClass,
         riskDotClass
